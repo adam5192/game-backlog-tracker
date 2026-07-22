@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 // check if user login session needs refreshing so it doesnt expire
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   // add early so supabase can attach updated cookies, return later
   let supabaseResponse = NextResponse.next({ request });
 
