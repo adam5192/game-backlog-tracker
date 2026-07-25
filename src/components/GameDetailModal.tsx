@@ -1,0 +1,133 @@
+"use client";
+
+import { useState } from "react";
+
+type GameDetail = {
+  userGameId: string;
+  gameId: string;
+  name: string;
+  coverUrl: string | null;
+  description: string | null;
+  criticScore: number | null;
+  hltbMain: number | null;
+  hltbMainExtra: number | null;
+  hltbCompletionist: number | null;
+  status: string;
+  rating: number | null;
+  notes: string | null;
+};
+
+type Props = {
+  game: GameDetail;
+  onClose: () => void;
+};
+
+export default function GameDetailModal({ game, onClose }: Props) {
+  // local state for editable fields, starts pre-filled with whatever the game has saved already
+  const [status, setStatus] = useState(game.status);
+  const [rating, setRating] = useState(game.rating?.toString() ?? "");
+  const [notes, setNotes] = useState(game.notes ?? "");
+  const [saving, setSaving] = useState(false);
+
+  async function handleSave() {
+    setSaving(true);
+    await fetch(`/api/games/update`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userGameId: game.userGameId,
+        status,
+        rating: rating ? parseFloat(rating) : null,
+        notes,
+      }),
+    });
+    setSaving(false);
+    onClose();
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-lg max-w-md w-full overflow-hidden">
+        <div className="h-36 bg-gray-200 relative">
+          $
+          {game.coverUrl && (
+            // TODO: switch to next/image later for optimization
+            <img
+              src={game.coverUrl}
+              className="w-full h-full object-cover"
+              alt={game.name}
+            />
+          )}
+          <button
+            onClick={onClose}
+            className="absolute top-2 right-2 bg-white rounded-full w-7 h-7"
+          >
+            x
+          </button>
+        </div>
+
+        <div className="p-5">
+          <h2 className="text-xl font-medium mb-2">{game.name}</h2>
+
+          {game.description && (
+            <p className="text-sm text-gray-600 mb-4">{game.description}</p>
+          )}
+
+          <div className="grid grid-cols-3 gap-3 mb-4">
+            <div className="bg-gray-100 rounded p-3 text-center">
+              <p className="text-xs text-gray-500">Critic score</p>
+              <p className="text-lg font-medium">{game.criticScore ?? "-"}</p>
+            </div>
+            <div className="bg-gray-100 rounded p-3 text-center">
+              <p className="text-xs text-gray-500">Main Story</p>
+              <p className="text-lg font-medium">{game.hltbMain ?? "-"}h</p>
+            </div>
+            <div className="bg-gray-100 rounded p-3 text-center">
+              <p className="text-xs text-gray-500">Completionist</p>
+              <p className="text-lg font-medium">
+                {game.hltbCompletionist ?? "-"}h
+              </p>
+            </div>
+          </div>
+
+          <label className="text-sm mb-1 block">Status</label>
+          <select
+            className="border p-2 w-full mb-3"
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+          >
+            <option value="backlog">Backlog</option>
+            <option value="playing">Playing</option>
+            <option value="completed">Completed</option>
+            <option value="dropped">Dropped</option>
+          </select>
+
+          <label className="text-sm mb-1 block">Your rating</label>
+          <input
+            className="border p-2 w-full mb-3"
+            type="number"
+            step="0.1"
+            value={rating}
+            onChange={(e) => setRating(e.target.value)}
+          />
+
+          <label className="text-sm mb-1 block">Notes</label>
+          <textarea
+            className="border p-2 w-full mb-4"
+            rows={3}
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+          />
+
+          <button
+            className="border px-4 py-2 w-full bg-black tet-white disabled:opacity-50"
+            onClick={handleSave}
+            disabled={saving}
+          >
+            {saving ? "Saving..." : "Save Changes"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

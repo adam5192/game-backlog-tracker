@@ -3,6 +3,9 @@ import { createClient } from "@/utils/supabase/server";
 import { db } from "@/db";
 import { games, userGames } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { HowLongToBeatService } from "howlongtobeat";
+
+const hltbService = new HowLongToBeatService();
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -28,9 +31,38 @@ export async function POST(request: NextRequest) {
 
   // if doesnt exist, insert now
   if (!gameRecord) {
+    // only fetch HLTB data the first time ANYONE adds the game, cahce for later users
+    let hltbData: {
+      hltbMain: number | null;
+      hltbMainExtra: number | null;
+      hltbCompletionist: number | null;
+    } = { hltbMain: null, hltbMainExtra: null, hltbCompletionist: null };
+    try {
+      const results = await hltbService.search(name);
+      const best = results[0];
+      if (best) {
+        hltbData = {
+          hltbMain: best.gameplayMain,
+          hltbMainExtra: best.gameplayMainExtra,
+          hltbCompletionist: best.gameplayCompletionist,
+        };
+      }
+    } catch {
+      // if HLTB lookup fails, continue instead of blocking the add
+    }
+
     const inserted = await db
       .insert(games)
-      .values({ rawgId, name, coverUrl, criticScore, releaseDate })
+      .values({
+        rawgId: rawgId.toString(),
+        name,
+        coverUrl,
+        criticScore: criticScore?.toString() ?? null,
+        releaseDate,
+        hltbMain: hltbData.hltbMain?.toString() ?? null,
+        hltbMainExtra: hltbData.hltbMainExtra?.toString() ?? null,
+        hltbCompletionist: hltbData.hltbCompletionist?.toString() ?? null,
+      })
       .returning(); // tells postgres to hand back the row it just created
     gameRecord = inserted[0];
   }
