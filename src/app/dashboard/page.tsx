@@ -31,6 +31,7 @@ export default async function DashboardPage() {
     gameId: row.games.id,
     name: row.games.name,
     coverUrl: row.games.coverUrl,
+    artworkUrl: row.games.artworkUrl,
     description: row.games.description,
     criticScore: row.games.criticScore ? Number(row.games.criticScore) : null,
     hltbMain: row.games.hltbMain ? Number(row.games.hltbMain) : null,
