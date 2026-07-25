@@ -67,7 +67,9 @@ export default function GameDetailModal({ game, onClose }: Props) {
         </div>
 
         <div className="p-5">
-          <h2 className="text-xl font-medium mb-2">{game.name}</h2>
+          <h2 className="text-xl font-medium mb-2 text-gray-900">
+            {game.name}
+          </h2>
 
           {game.description && (
             <p className="text-sm text-gray-600 mb-4">{game.description}</p>
@@ -76,23 +78,27 @@ export default function GameDetailModal({ game, onClose }: Props) {
           <div className="grid grid-cols-3 gap-3 mb-4">
             <div className="bg-gray-100 rounded p-3 text-center">
               <p className="text-xs text-gray-500">Critic score</p>
-              <p className="text-lg font-medium">{game.criticScore ?? "-"}</p>
+              <p className="text-lg font-medium text-gray-900">
+                {game.criticScore ?? "-"}
+              </p>
             </div>
             <div className="bg-gray-100 rounded p-3 text-center">
               <p className="text-xs text-gray-500">Main Story</p>
-              <p className="text-lg font-medium">{game.hltbMain ?? "-"}h</p>
+              <p className="text-lg font-medium text-gray-900">
+                {game.hltbMain ?? "-"}h
+              </p>
             </div>
             <div className="bg-gray-100 rounded p-3 text-center">
               <p className="text-xs text-gray-500">Completionist</p>
-              <p className="text-lg font-medium">
+              <p className="text-lg font-medium text-gray-900">
                 {game.hltbCompletionist ?? "-"}h
               </p>
             </div>
           </div>
 
-          <label className="text-sm mb-1 block">Status</label>
+          <label className="text-sm mb-1 block text-gray-700">Status</label>
           <select
-            className="border p-2 w-full mb-3"
+            className="border p-2 w-full mb-3 text-gray-900"
             value={status}
             onChange={(e) => setStatus(e.target.value)}
           >
@@ -102,18 +108,20 @@ export default function GameDetailModal({ game, onClose }: Props) {
             <option value="dropped">Dropped</option>
           </select>
 
-          <label className="text-sm mb-1 block">Your rating</label>
+          <label className="text-sm mb-1 block text-gray-700">
+            Your rating
+          </label>
           <input
-            className="border p-2 w-full mb-3"
+            className="border p-2 w-full mb-3 text-gray-900"
             type="number"
             step="0.1"
             value={rating}
             onChange={(e) => setRating(e.target.value)}
           />
 
-          <label className="text-sm mb-1 block">Notes</label>
+          <label className="text-sm mb-1 block text-gray-800">Notes</label>
           <textarea
-            className="border p-2 w-full mb-4"
+            className="border p-2 w-full mb-4 text-gray-900"
             rows={3}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}

@@ -39,6 +39,7 @@ export async function POST(request: NextRequest) {
     } = { hltbMain: null, hltbMainExtra: null, hltbCompletionist: null };
     try {
       const results = await hltbService.search(name);
+      console.log("HLTB results for", name, ":", results); // temporary debug line
       const best = results[0];
       if (best) {
         hltbData = {
@@ -47,7 +48,8 @@ export async function POST(request: NextRequest) {
           hltbCompletionist: best.gameplayCompletionist,
         };
       }
-    } catch {
+    } catch (err) {
+      console.log("HLTB search failed:", err);
       // if HLTB lookup fails, continue instead of blocking the add
     }
 

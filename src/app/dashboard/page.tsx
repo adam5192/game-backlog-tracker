@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { db } from "@/db";
 import { userGames, games } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import GameList from "@/components/GameList";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -17,11 +18,32 @@ export default async function DashboardPage() {
   }
 
   // QUERY: get all user game entries, joined with games table (personal data + shared metaddata)
-  const myGames = await db
+  const rows = await db
     .select()
     .from(userGames)
     .innerJoin(games, eq(userGames.gameId, games.id))
     .where(eq(userGames.userId, user.id));
+
+  // drizzle's join results comes back nested by table name
+  // reshape it into the flat structure expected by gamedetailmodal and gamelist
+  const myGames = rows.map((row) => ({
+    userGameId: row.user_games.id,
+    gameId: row.games.id,
+    name: row.games.name,
+    coverUrl: row.games.coverUrl,
+    description: row.games.description,
+    criticScore: row.games.criticScore ? Number(row.games.criticScore) : null,
+    hltbMain: row.games.hltbMain ? Number(row.games.hltbMain) : null,
+    hltbMainExtra: row.games.hltbMainExtra
+      ? Number(row.games.hltbMainExtra)
+      : null,
+    hltbCompletionist: row.games.hltbCompletionist
+      ? Number(row.games.hltbCompletionist)
+      : null,
+    status: row.user_games.status,
+    rating: row.user_games.rating ? Number(row.user_games.rating) : null,
+    notes: row.user_games.notes,
+  }));
 
   return (
     <div className="p-8">
@@ -32,13 +54,8 @@ export default async function DashboardPage() {
           No games yet -- you have not added anything to your backlog.
         </p>
       ) : (
-        <ul className="space-y-2">
-          {myGames.map((row) => (
-            <li key={row.user_games.id}>
-              {row.games.name} -- {row.user_games.status}
-            </li>
-          ))}
-        </ul>
+        // client component will handle fetched reshaped data and modal interactivity
+        <GameList games={myGames} />
       )}
     </div>
   );
