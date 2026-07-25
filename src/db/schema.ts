@@ -9,9 +9,10 @@ import {
 
 export const games = pgTable("games", {
   id: uuid("id").primaryKey().defaultRandom(),
-  rawgId: numeric("rawg_id").unique(),
+  igdbId: numeric("igdb_id").unique(),
   name: text("name").notNull(),
-  coverUrl: text("cover_url"),
+  coverUrl: text("cover_url"), // box art  portrait, used in the list view
+  artworkUrl: text("artwork_url"), // key art/screenshot  wide, used in the modal
   description: text("description"),
   criticScore: numeric("critic_score"),
   releaseDate: date("release_date"),

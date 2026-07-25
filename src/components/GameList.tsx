@@ -9,6 +9,7 @@ type GameDetail = {
   gameId: string;
   name: string;
   coverUrl: string | null;
+  artworkUrl: string | null;
   description: string | null;
   criticScore: number | null;
   hltbMain: number | null;
@@ -30,7 +31,7 @@ export default function GameList({ games }: Props) {
 
   return (
     <>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-7 gap-3">
         {games.map((game) => (
           <button
             key={game.userGameId}
@@ -38,7 +39,7 @@ export default function GameList({ games }: Props) {
             onClick={() => setSelectedGame(game)}
             // setting selectedGame to this game triggers the modal to open
           >
-            <div className="h-24 bg-gray-200">
+            <div className="aspect-[3/4] bg-gray-200">
               {game.coverUrl && (
                 <img
                   src={game.coverUrl}

@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 type GameResult = {
-  rawgId: number;
+  igdbId: number;
   name: string;
   coverUrl: string;
   criticScore: number | null;
@@ -48,7 +48,7 @@ export default function SearchPage() {
       <ul className="space-y-3">
         {results.map((game) => (
           <li
-            key={game.rawgId}
+            key={game.igdbId}
             className="flex items-center justify-between border-b pb-2"
           >
             <span>

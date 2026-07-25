@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { searchIgdbGames, getFullCoverUrl } from "@/lib/igdb";
 
 // handle GET requests to /api/games/serach
 export async function GET(request: NextRequest) {
@@ -8,29 +9,21 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Missing query" }, { status: 400 });
   }
 
-  // call RAWG search endpoint
-  const res = await fetch(
-    `https://api.rawg.io/api/games?key=${process.env.RAWG_API_KEY}&search=${encodeURIComponent(query)}&page_size=10`,
-  );
+  const games = await searchIgdbGames(query);
 
-  const data = await res.json();
-
-  // shape of game object from rawg response
-  type RawgGame = {
-    id: number;
-    name: string;
-    background_image: string;
-    metacritic: number | null;
-    released: string;
-  };
-
-  // send back only needed fields to frontend
-  const results = data.results.map((game: RawgGame) => ({
-    rawgId: game.id,
+  const results = games.map((game) => ({
+    igdbId: game.id,
     name: game.name,
-    coverUrl: game.background_image,
-    criticScore: game.metacritic,
-    releaseDate: game.released,
+    description: game.summary ?? null,
+    coverUrl: game.cover?.url ? getFullCoverUrl(game.cover.url) : null,
+    artworkUrl: game.artworks?.[0]?.url
+      ? getFullCoverUrl(game.artworks[0].url)
+      : game.cover?.url
+        ? getFullCoverUrl(game.cover.url)
+        : null,
+    releaseDate: game.first_release_date
+      ? new Date(game.first_release_date * 1000).toISOString().split("T")[0]
+      : null,
   }));
 
   return NextResponse.json({ results });

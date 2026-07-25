@@ -7,6 +7,7 @@ type GameDetail = {
   gameId: string;
   name: string;
   coverUrl: string | null;
+  artworkUrl: string | null;
   description: string | null;
   criticScore: number | null;
   hltbMain: number | null;
@@ -48,12 +49,10 @@ export default function GameDetailModal({ game, onClose }: Props) {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg max-w-md w-full overflow-hidden">
-        <div className="h-36 bg-gray-200 relative">
-          $
-          {game.coverUrl && (
-            // TODO: switch to next/image later for optimization
+        <div className="aspect-video bg-gray-200 relative">
+          {(game.artworkUrl ?? game.coverUrl) && (
             <img
-              src={game.coverUrl}
+              src={game.artworkUrl ?? game.coverUrl ?? undefined}
               className="w-full h-full object-cover"
               alt={game.name}
             />
@@ -62,7 +61,7 @@ export default function GameDetailModal({ game, onClose }: Props) {
             onClick={onClose}
             className="absolute top-2 right-2 bg-white rounded-full w-7 h-7"
           >
-            x
+            ×
           </button>
         </div>
 

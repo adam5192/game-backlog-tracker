@@ -3,9 +3,7 @@ import { createClient } from "@/utils/supabase/server";
 import { db } from "@/db";
 import { games, userGames } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { HowLongToBeatService } from "howlongtobeat";
-
-const hltbService = new HowLongToBeatService();
+import { getTimeToBeatById } from "@/lib/igdb";
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -19,13 +17,21 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { rawgId, name, coverUrl, criticScore, releaseDate, status } = body;
+  const {
+    igdbId,
+    name,
+    coverUrl,
+    artworkUrl,
+    description,
+    releaseDate,
+    status,
+  } = body;
 
   // check if game exists in local cache
   const existing = await db
     .select()
     .from(games)
-    .where(eq(games.rawgId, rawgId));
+    .where(eq(games.igdbId, igdbId.toString()));
 
   let gameRecord = existing[0];
 
@@ -37,29 +43,22 @@ export async function POST(request: NextRequest) {
       hltbMainExtra: number | null;
       hltbCompletionist: number | null;
     } = { hltbMain: null, hltbMainExtra: null, hltbCompletionist: null };
+
     try {
-      const results = await hltbService.search(name);
-      console.log("HLTB results for", name, ":", results); // temporary debug line
-      const best = results[0];
-      if (best) {
-        hltbData = {
-          hltbMain: best.gameplayMain,
-          hltbMainExtra: best.gameplayMainExtra,
-          hltbCompletionist: best.gameplayCompletionist,
-        };
-      }
-    } catch (err) {
-      console.log("HLTB search failed:", err);
-      // if HLTB lookup fails, continue instead of blocking the add
+      const result = await getTimeToBeatById(igdbId);
+      if (result) hltbData = result;
+    } catch {
+      // if not data, still proceed
     }
 
     const inserted = await db
       .insert(games)
       .values({
-        rawgId: rawgId.toString(),
+        igdbId: igdbId.toString(),
         name,
         coverUrl,
-        criticScore: criticScore?.toString() ?? null,
+        artworkUrl,
+        description,
         releaseDate,
         hltbMain: hltbData.hltbMain?.toString() ?? null,
         hltbMainExtra: hltbData.hltbMainExtra?.toString() ?? null,
