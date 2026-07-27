@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 type GameDetail = {
@@ -29,6 +30,7 @@ export default function GameDetailModal({ game, onClose }: Props) {
   const [rating, setRating] = useState(game.rating?.toString() ?? "");
   const [notes, setNotes] = useState(game.notes ?? "");
   const [saving, setSaving] = useState(false);
+  const router = useRouter();
 
   async function handleSave() {
     setSaving(true);
@@ -43,6 +45,22 @@ export default function GameDetailModal({ game, onClose }: Props) {
       }),
     });
     setSaving(false);
+    router.refresh(); // re-fetch the dashboard's server-side data
+    onClose();
+  }
+
+  async function handleDelete() {
+    const confirmed = window.confirm(`Remove ${game.name} from your list?`);
+    if (!confirmed) return;
+
+    setSaving(true);
+    await fetch("/api/games/delete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userGameId: game.userGameId }),
+    });
+    setSaving(false);
+    router.refresh();
     onClose();
   }
 
@@ -126,13 +144,23 @@ export default function GameDetailModal({ game, onClose }: Props) {
             onChange={(e) => setNotes(e.target.value)}
           />
 
-          <button
-            className="border px-4 py-2 w-full bg-black tet-white disabled:opacity-50"
-            onClick={handleSave}
-            disabled={saving}
-          >
-            {saving ? "Saving..." : "Save Changes"}
-          </button>
+          <div className="flex gap-2">
+            <button
+              className="border px-4 py-2 w-full bg-black tet-white disabled:opacity-50"
+              onClick={handleSave}
+              disabled={saving}
+            >
+              {saving ? "Saving..." : "Save Changes"}
+            </button>
+
+            <button
+              className="border border-red-600 text-red-600 px-4 py-2 disabled:opacity:50"
+              onClick={handleDelete}
+              disabled={saving}
+            >
+              Remove
+            </button>
+          </div>
         </div>
       </div>
     </div>
