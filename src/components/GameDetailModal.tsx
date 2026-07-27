@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import Image from "next/image";
 
 type GameDetail = {
   userGameId: string;
@@ -69,10 +70,12 @@ export default function GameDetailModal({ game, onClose }: Props) {
       <div className="bg-white rounded-lg max-w-md w-full overflow-hidden">
         <div className="aspect-video bg-gray-200 relative">
           {(game.artworkUrl ?? game.coverUrl) && (
-            <img
-              src={game.artworkUrl ?? game.coverUrl ?? undefined}
-              className="w-full h-full object-cover"
+            <Image
+              src={game.artworkUrl ?? game.coverUrl ?? ""}
               alt={game.name}
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 448px"
             />
           )}
           <button

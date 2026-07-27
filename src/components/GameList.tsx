@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import GameDetailModal from "./GameDetailModal";
+import Image from "next/image";
 
 // matches gamedetailmodal shape, build from joined drizzle query results
 type GameDetail = {
@@ -39,12 +40,14 @@ export default function GameList({ games }: Props) {
             onClick={() => setSelectedGame(game)}
             // setting selectedGame to this game triggers the modal to open
           >
-            <div className="aspect-[3/4] bg-gray-200">
+            <div className="aspect-3/4 bg-gray-200 relative">
               {game.coverUrl && (
-                <img
+                <Image
                   src={game.coverUrl}
                   alt={game.name}
-                  className="w-full h-full object-cover"
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 33vw, 16vw"
                 />
               )}
             </div>
