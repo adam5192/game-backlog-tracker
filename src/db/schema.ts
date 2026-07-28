@@ -37,3 +37,10 @@ export const userGames = pgTable("user_games", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
+
+export const recommendations = pgTable("recommendations", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull().unique(), // one cached set per user
+  data: text("data").notNull(), // JSON string: an array of recommendations
+  generatedAt: timestamp("generated_at").defaultNow(),
+});

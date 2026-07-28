@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { userGames, games } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import GameList from "@/components/GameList";
+import RecommendationCard from "@/components/RecommendationCard";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -49,6 +50,8 @@ export default async function DashboardPage() {
   return (
     <div className="p-8">
       <h1 className="text-2xl font-medium mb-6">Your Dashboard</h1>
+
+      <RecommendationCard />
 
       {myGames.length === 0 ? (
         <p className="text-gray-500">

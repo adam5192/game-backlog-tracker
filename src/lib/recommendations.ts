@@ -4,7 +4,6 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
-// trimmed-down game info to feed to the model
 type CompletedGame = {
   name: string;
   rating: number | null;
@@ -17,21 +16,21 @@ type BacklogGame = {
   description: string | null;
 };
 
-type Recommendation = {
+export type Recommendation = {
   userGameId: string;
   reason: string;
 };
 
-export async function getRecommendation(
+// now generates several recommendations in ONE api call
+export async function getRecommendations(
   completed: CompletedGame[],
   backlog: BacklogGame[],
-): Promise<Recommendation | null> {
-  // not enough detail to make a meaningful recommendation, so dont show anything
+  count: number = 3,
+): Promise<Recommendation[]> {
   if (completed.length === 0 || backlog.length === 0) {
-    return null;
+    return [];
   }
 
-  // build the prompt as plain text with rating history, notes, backlog
   const completedSummary = completed
     .map(
       (g) =>
@@ -48,7 +47,7 @@ export async function getRecommendation(
 
   const message = await anthropic.messages.create({
     model: "claude-sonnet-5",
-    max_tokens: 300,
+    max_tokens: 600,
     messages: [
       {
         role: "user",
@@ -60,28 +59,28 @@ export async function getRecommendation(
         Their backlog to choose from (format: [id] name: description):
         ${backlogSummary}
 
-        Pick exactly ONE game from the backlog that best fits their taste based on their rating history. Respond with ONLY valid JSON, no other text, in this exact shape:
-        {"userGameId": "<the id in brackets from the backlog list>", "reason": "<a short, specific, 1-2 sentence explanation referencing their actual play history>"}`,
+        Pick ${Math.min(count, backlog.length)} DIFFERENT games from the backlog that best fit their taste, ranked best-first. Write each reason addressing the person directly as "you"/"your" (not "they"/"their"). Respond with ONLY valid JSON, no other text, in this exact shape:
+        [{"userGameId": "<id from backlog list>", "reason": "<1-2 sentences, addressed to the person as 'you'>"}, ...]`,
       },
     ],
   });
 
-  // claude response comes back as an array of content blocks
   const textBlock = message.content.find((block) => block.type === "text");
-  if (!textBlock || textBlock.type !== "text") return null;
+  if (!textBlock || textBlock.type !== "text") return [];
 
   try {
-    // strip possible markdown code fences just in case
     const cleaned = textBlock.text.replace(/```json|```/g, "").trim();
     const parsed = JSON.parse(cleaned);
 
-    // validate the model actually picked a real backlog id
-    const validIds = new Set(backlog.map((g) => g.id));
-    if (!validIds.has(parsed.userGameId)) return null;
+    if (!Array.isArray(parsed)) return [];
 
-    return { userGameId: parsed.userGameId, reason: parsed.reason };
+    const validIds = new Set(backlog.map((g) => g.id));
+    // filter out any hallucinated ids
+    return parsed.filter(
+      (r): r is Recommendation =>
+        typeof r.userGameId === "string" && validIds.has(r.userGameId),
+    );
   } catch {
-    // if parsing fails, fail gracefully
-    return null;
+    return [];
   }
 }
