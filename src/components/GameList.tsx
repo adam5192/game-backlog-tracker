@@ -36,11 +36,11 @@ export default function GameList({ games }: Props) {
         {games.map((game) => (
           <button
             key={game.userGameId}
-            className="text-left border rounded-lg overflow-hidden"
+            className="text-left border border-gray-700 rounded-lg overflow-hidden"
             onClick={() => setSelectedGame(game)}
             // setting selectedGame to this game triggers the modal to open
           >
-            <div className="aspect-3/4 bg-gray-200 relative">
+            <div className="aspect-3/4 bg-gray-800 relative">
               {game.coverUrl && (
                 <Image
                   src={game.coverUrl}
@@ -52,7 +52,9 @@ export default function GameList({ games }: Props) {
               )}
             </div>
             <div className="p-2">
-              <p className="text-sm font-medium truncate">{game.name}</p>
+              <p className="text-sm font-medium truncate text-gray-100">
+                {game.name}
+              </p>
               <p className="text-xs text-gray-500 capitalize">{game.status}</p>
             </div>
           </button>

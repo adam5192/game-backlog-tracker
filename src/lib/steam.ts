@@ -155,15 +155,6 @@ export async function matchGamesToIgdb(
           (g) => g.name.toLowerCase() === cleanedName.toLowerCase(),
         );
 
-        // temporary debug — see exactly what candidates exist and their rating counts
-        console.log(
-          `Candidates for "${cleanedName}":`,
-          candidates.map((c) => ({
-            name: c.name,
-            ratingCount: c.total_rating_count,
-          })),
-        );
-
         if (exact) {
           best = exact;
         } else if (candidates.length > 0) {

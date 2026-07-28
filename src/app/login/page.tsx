@@ -41,7 +41,7 @@ export default function LoginPage() {
         value={password}
         onChange={(e) => setPassword(e.target.value)}
       />
-      {error && <p className="text-red-500 text-sm">error</p>}
+      {error && <p className="text-red-500 text-sm">{error}</p>}
       <div className="flex gap-2">
         <button className="border px-4 py-2" onClick={handleSignIn}>
           Log in
