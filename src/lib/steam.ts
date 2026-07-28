@@ -1,3 +1,5 @@
+import { searchIgdbGames, getFullCoverUrl, findExactIgdbMatch } from "./igdb";
+
 // extract eitheer raw SteamID64 or a vanity name depending on format of user URL
 export async function resolveSteamId(input: string): Promise<string | null> {
   const cleaned = input.trim().replace(/\/$/, "");
@@ -30,4 +32,107 @@ export async function resolveSteamId(input: string): Promise<string | null> {
   }
 
   return null; // couldnt resolve
+}
+
+type SteamGame = {
+  appid: number;
+  name: string;
+  playtime_forever: number; // total minutes played
+};
+
+// feteches a users full steam library using their resolved steamid64
+// retirms empty array when profile is private or has no games
+export async function getOwnedGames(steamId: string): Promise<SteamGame[]> {
+  const res = await fetch(
+    `https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?key=${process.env.STEAM_API_KEY}&steamid=${steamId}&include_appinfo=true&format=json`,
+  );
+  const data = await res.json();
+
+  return data.response?.games ?? [];
+}
+
+// data the frontend will need for each steam game
+export type SteamImportCandidate = {
+  steamAppId: number;
+  steamName: string;
+  playtimeMinutes: number;
+  igdbMatch: {
+    igdbId: number;
+    name: string;
+    coverUrl: string | null;
+  } | null;
+};
+
+// take raw steam library and try to find an igdb match for each game
+export async function matchGamesToIgdb(
+  steamGames: { appid: number; name: string; playtime_forever: number }[],
+): Promise<SteamImportCandidate[]> {
+  function cleanGameName(name: string): string {
+    return (
+      name
+        // strip symbols that appear in IGDB's names but are common in Steam's official titles
+        .replace(/[™®©]/g, "")
+        .trim()
+    );
+  }
+
+  // strip common suffixes that do not appear in game database but appear in steam titles
+  function stripEditionSuffix(name: string): string {
+    return name
+      .replace(
+        /\s*-?\s*(game of the year|goty|definitive|legacy|remastered?|complete|deluxe|enhanced|special)\s*(edition)?\s*(\(\d{4}\))?$/i,
+        "",
+      )
+      .trim();
+  }
+
+  const results: SteamImportCandidate[] = [];
+
+  for (const steamGame of steamGames) {
+    let igdbMatch: SteamImportCandidate["igdbMatch"] = null;
+    const cleanedName = cleanGameName(steamGame.name);
+
+    try {
+      // STEP 1: try a direct exact-name match first
+      let best = await findExactIgdbMatch(cleanedName);
+
+      // STEP 2: fall back if no exact match exists
+      if (!best) {
+        let candidates = await searchIgdbGames(cleanedName);
+
+        // if nothing came back, try again without extra suffixes
+        if (candidates.length === 0) {
+          const simplifiedName = stripEditionSuffix(cleanedName);
+          if (simplifiedName !== cleanedName) {
+            candidates = await searchIgdbGames(simplifiedName);
+          }
+        }
+
+        // prefer exact name match, fall back to best result
+        const exact = candidates.find(
+          (g) => g.name.toLowerCase() === cleanedName.toLowerCase(),
+        );
+        best = exact ?? candidates[0];
+      }
+
+      if (best) {
+        igdbMatch = {
+          igdbId: best.id,
+          name: best.name,
+          coverUrl: best.cover?.url ? getFullCoverUrl(best.cover.url) : null,
+        };
+      }
+    } catch {
+      // if lookup fails, skip
+    }
+
+    results.push({
+      steamAppId: steamGame.appid,
+      steamName: steamGame.name,
+      playtimeMinutes: steamGame.playtime_forever,
+      igdbMatch,
+    });
+  }
+
+  return results;
 }

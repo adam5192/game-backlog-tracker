@@ -68,3 +68,22 @@ export async function getTimeToBeatById(igdbGameId: number) {
 export function getFullCoverUrl(rawUrl: string): string {
   return `https:${rawUrl.replace("t_thumb", "t_720p")}`;
 }
+
+// attempts a direct, exact-name lookup
+export async function findExactIgdbMatch(
+  name: string,
+): Promise<IgdbGame | null> {
+  const token = await getIgdbAccessToken();
+
+  const res = await fetch("https://api.igdb.com/v4/games", {
+    method: "POST",
+    headers: {
+      "Client-ID": process.env.IGDB_CLIENT_ID!,
+      Authorization: `Bearer ${token}`,
+    },
+    body: `fields name,summary,first_release_date,artworks.url,cover.url; where name = "${name}"; limit 1;`,
+  });
+
+  const data = await res.json();
+  return Array.isArray(data) && data[0] ? data[0] : null;
+}

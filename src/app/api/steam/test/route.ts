@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { resolveSteamId } from "@/lib/steam";
+import { resolveSteamId, getOwnedGames, matchGamesToIgdb } from "@/lib/steam";
 
-// TEMPORARY  just for testing resolveSteamId directly.
-// will delete this once i build the real import flow.
 export async function GET(request: NextRequest) {
   const input = request.nextUrl.searchParams.get("input");
 
@@ -12,5 +10,17 @@ export async function GET(request: NextRequest) {
 
   const steamId = await resolveSteamId(input);
 
-  return NextResponse.json({ input, resolvedSteamId: steamId });
+  if (!steamId) {
+    return NextResponse.json(
+      { error: "Could not resolve Steam ID" },
+      { status: 400 },
+    );
+  }
+
+  const games = await getOwnedGames(steamId);
+
+  // match the first 5 games for this quick test
+  const matched = await matchGamesToIgdb(games.slice(0, 50));
+
+  return NextResponse.json({ steamId, gameCount: games.length, matched });
 }
