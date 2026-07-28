@@ -16,6 +16,7 @@ export type IgdbGame = {
   first_release_date?: number; // unix timestamp (seconds)
   artworks?: { url: string }[];
   cover?: { url: string };
+  total_rating_count?: number; // used as a tiebreaker for matching games
 };
 
 // searches IGDB directly
@@ -81,9 +82,15 @@ export async function findExactIgdbMatch(
       "Client-ID": process.env.IGDB_CLIENT_ID!,
       Authorization: `Bearer ${token}`,
     },
-    body: `fields name,summary,first_release_date,artworks.url,cover.url; where name = "${name}"; limit 1;`,
+    // if there are multiple exact matches, dont just trust whichever one comes back first
+    // select the more popular option based on rating count
+    body: `fields name,summary,first_release_date,artworks.url,cover.url,total_rating_count; where name = "${name}"; sort total_rating_count desc; limit 5;`,
   });
 
   const data = await res.json();
-  return Array.isArray(data) && data[0] ? data[0] : null;
+
+  if (!Array.isArray(data) || data.length === 0) return null;
+
+  // because of the sorting, the most popular exact match is now the first result
+  return data[0];
 }
