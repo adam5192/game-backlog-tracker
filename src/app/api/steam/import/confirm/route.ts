@@ -4,13 +4,17 @@ import { db } from "@/db";
 import { games, userGames } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { getTimeToBeatById } from "@/lib/igdb";
-import { getMetacriticScore } from "@/lib/rawg";
 
 type ConfirmedCandidate = {
   steamAppId: number;
   steamName: string;
   playtimeMinutes: number;
-  igdbMatch: { igdbId: number; name: string; coverUrl: string | null };
+  igdbMatch: {
+    igdbId: number;
+    name: string;
+    coverUrl: string | null;
+    criticScore: number | null;
+  };
 };
 
 export async function POST(request: NextRequest) {
@@ -50,18 +54,13 @@ export async function POST(request: NextRequest) {
         if (result) hltbData = result;
       } catch {}
 
-      let criticScore: number | null = null;
-      try {
-        criticScore = await getMetacriticScore(candidate.igdbMatch.name, null);
-      } catch {}
-
       const inserted = await db
         .insert(games)
         .values({
           igdbId: igdbId.toString(),
           name: candidate.igdbMatch.name,
           coverUrl: candidate.igdbMatch.coverUrl,
-          criticScore: criticScore?.toString() ?? null,
+          criticScore: candidate.igdbMatch.criticScore?.toString() ?? null,
           hltbMain: hltbData.hltbMain?.toString() ?? null,
           hltbMainExtra: hltbData.hltbMainExtra?.toString() ?? null,
           hltbCompletionist: hltbData.hltbCompletionist?.toString() ?? null,

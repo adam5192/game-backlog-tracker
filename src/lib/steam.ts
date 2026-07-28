@@ -1,4 +1,9 @@
-import { searchIgdbGames, getFullCoverUrl, findExactIgdbMatch } from "./igdb";
+import {
+  searchIgdbGames,
+  getFullCoverUrl,
+  findExactIgdbMatch,
+  getBlendedRating,
+} from "./igdb";
 
 // extract eitheer raw SteamID64 or a vanity name depending on format of user URL
 export async function resolveSteamId(input: string): Promise<string | null> {
@@ -60,6 +65,7 @@ export type SteamImportCandidate = {
     igdbId: number;
     name: string;
     coverUrl: string | null;
+    criticScore: number | null;
   } | null;
 };
 
@@ -86,6 +92,16 @@ export async function matchGamesToIgdb(
       .trim();
   }
 
+  // strip common publisher/franchise branding steam includes but igdb usually omits
+  function stripBrandingPrefix(name: string): string {
+    return name
+      .replace(
+        /^(EA SPORTS™?|EA SPORTS FC™?|Tom Clancy'?s|Sid Meier'?s|Marvel'?s|Disney'?s)\s+/i,
+        "",
+      )
+      .trim();
+  }
+
   const results: SteamImportCandidate[] = [];
 
   for (const steamGame of steamGames) {
@@ -100,6 +116,32 @@ export async function matchGamesToIgdb(
       if (!best) {
         let candidates = await searchIgdbGames(cleanedName);
 
+        // if the colon-preserving search returned few/no results, try again
+        // with the colon replaced by a space, since steam/igdb dont always
+        // agree on "title:sub" vs "title: sub"
+        if (candidates.length < 3 && cleanedName.includes(":")) {
+          const noColonName = cleanedName
+            .replace(/:/g, " ")
+            .replace(/\s+/g, " ")
+            .trim();
+          const altCandidates = await searchIgdbGames(noColonName);
+          const seen = new Set(candidates.map((c) => c.id));
+          for (const c of altCandidates) {
+            if (!seen.has(c.id)) {
+              candidates.push(c);
+              seen.add(c.id);
+            }
+          }
+        }
+
+        // if still nothing, try stripping a known publisher/franchise prefix
+        if (candidates.length === 0) {
+          const noPrefixName = stripBrandingPrefix(cleanedName);
+          if (noPrefixName !== cleanedName) {
+            candidates = await searchIgdbGames(noPrefixName);
+          }
+        }
+
         // if nothing came back, try again without extra suffixes
         if (candidates.length === 0) {
           const simplifiedName = stripEditionSuffix(cleanedName);
@@ -112,7 +154,24 @@ export async function matchGamesToIgdb(
         const exact = candidates.find(
           (g) => g.name.toLowerCase() === cleanedName.toLowerCase(),
         );
-        best = exact ?? candidates[0];
+
+        // temporary debug — see exactly what candidates exist and their rating counts
+        console.log(
+          `Candidates for "${cleanedName}":`,
+          candidates.map((c) => ({
+            name: c.name,
+            ratingCount: c.total_rating_count,
+          })),
+        );
+
+        if (exact) {
+          best = exact;
+        } else if (candidates.length > 0) {
+          // prefer whichever candidate has the highest total_rating_count as a popularity signal
+          best = [...candidates].sort(
+            (a, b) => (b.total_rating_count ?? 0) - (a.total_rating_count ?? 0),
+          )[0];
+        }
       }
 
       if (best) {
@@ -120,6 +179,7 @@ export async function matchGamesToIgdb(
           igdbId: best.id,
           name: best.name,
           coverUrl: best.cover?.url ? getFullCoverUrl(best.cover.url) : null,
+          criticScore: getBlendedRating(best),
         };
       }
     } catch {

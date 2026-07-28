@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { searchIgdbGames, getFullCoverUrl } from "@/lib/igdb";
+import { searchIgdbGames, getFullCoverUrl, getBlendedRating } from "@/lib/igdb";
 
 // handle GET requests to /api/games/serach
 export async function GET(request: NextRequest) {
@@ -11,7 +11,12 @@ export async function GET(request: NextRequest) {
 
   const games = await searchIgdbGames(query);
 
-  const results = games.map((game) => ({
+  // sort by rating count
+  const sorted = [...games].sort(
+    (a, b) => (b.total_rating_count ?? 0) - (a.total_rating_count ?? 0),
+  );
+
+  const results = sorted.map((game) => ({
     igdbId: game.id,
     name: game.name,
     description: game.summary ?? null,
@@ -24,6 +29,7 @@ export async function GET(request: NextRequest) {
     releaseDate: game.first_release_date
       ? new Date(game.first_release_date * 1000).toISOString().split("T")[0]
       : null,
+    criticScore: getBlendedRating(game),
   }));
 
   return NextResponse.json({ results });

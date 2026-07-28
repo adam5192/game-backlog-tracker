@@ -95,9 +95,12 @@ export default function GameDetailModal({ game, onClose }: Props) {
             <p className="text-sm text-gray-600 mb-4">{game.description}</p>
           )}
 
-          <div className="grid grid-cols-3 gap-3 mb-4">
+          <div
+            className="grid grid-cols-3 gap-3 mb-4"
+            title="A blended average of critic and user ratings from IGDB.com"
+          >
             <div className="bg-gray-100 rounded p-3 text-center">
-              <p className="text-xs text-gray-500">Critic score</p>
+              <p className="text-xs text-gray-500">IGDB rating</p>
               <p className="text-lg font-medium text-gray-900">
                 {game.criticScore ?? "-"}
               </p>

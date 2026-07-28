@@ -4,7 +4,7 @@ import { db } from "@/db";
 import { games, userGames } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { getTimeToBeatById } from "@/lib/igdb";
-import { getMetacriticScore } from "@/lib/rawg";
+// import { getMetacriticScore } from "@/lib/rawg";
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -26,6 +26,7 @@ export async function POST(request: NextRequest) {
     description,
     releaseDate,
     status,
+    criticScore,
   } = body;
 
   // check if game exists in local cache
@@ -52,16 +53,16 @@ export async function POST(request: NextRequest) {
       // if not data, still proceed
     }
 
-    // best-effort metacritic lookup
-    let criticScore: number | null = null;
-    try {
-      const releaseYear = releaseDate
-        ? new Date(releaseDate).getFullYear()
-        : null;
-      criticScore = await getMetacriticScore(name, releaseYear);
-    } catch {
-      // proceed without critic score
-    }
+    // // best-effort metacritic lookup
+    // let criticScore: number | null = null;
+    // try {
+    //   const releaseYear = releaseDate
+    //     ? new Date(releaseDate).getFullYear()
+    //     : null;
+    //   criticScore = await getMetacriticScore(name, releaseYear);
+    // } catch {
+    //   // proceed without critic score
+    // }
 
     const inserted = await db
       .insert(games)

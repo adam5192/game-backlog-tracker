@@ -17,6 +17,8 @@ export type IgdbGame = {
   artworks?: { url: string }[];
   cover?: { url: string };
   total_rating_count?: number; // used as a tiebreaker for matching games
+  aggregated_rating?: number; // critic average
+  rating?: number; // user average
 };
 
 // searches IGDB directly
@@ -29,9 +31,8 @@ export async function searchIgdbGames(query: string): Promise<IgdbGame[]> {
       "Client-ID": process.env.IGDB_CLIENT_ID!,
       Authorization: `Bearer ${token}`,
     },
-    // cover.url: reaches into the related "cover" object for its url field
     // limit 15: gives the user enough real options to pick the right one
-    body: `search "${query}"; fields name,summary,first_release_date,artworks.url,cover.url; limit 15;`,
+    body: `search "${query}"; fields name,summary,first_release_date,artworks.url,cover.url,aggregated_rating,rating,total_rating_count; limit 15;`,
   });
 
   const data = await res.json();
@@ -70,6 +71,17 @@ export function getFullCoverUrl(rawUrl: string): string {
   return `https:${rawUrl.replace("t_thumb", "t_720p")}`;
 }
 
+export function getBlendedRating(game: IgdbGame): number | null {
+  const critic = game.aggregated_rating;
+  const user = game.rating;
+
+  if (critic != null && user != null) {
+    return Math.round((critic + user) / 2);
+  }
+  const single = critic ?? user;
+  return single != null ? Math.round(single) : null;
+}
+
 // attempts a direct, exact-name lookup
 export async function findExactIgdbMatch(
   name: string,
@@ -84,7 +96,7 @@ export async function findExactIgdbMatch(
     },
     // if there are multiple exact matches, dont just trust whichever one comes back first
     // select the more popular option based on rating count
-    body: `fields name,summary,first_release_date,artworks.url,cover.url,total_rating_count; where name = "${name}"; sort total_rating_count desc; limit 5;`,
+    body: `fields name,summary,first_release_date,artworks.url,cover.url,aggregated_rating,rating,total_rating_count; where name = "${name}"; sort total_rating_count desc; limit 5;`,
   });
 
   const data = await res.json();
