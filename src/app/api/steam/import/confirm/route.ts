@@ -9,6 +9,7 @@ type ConfirmedCandidate = {
   steamAppId: number;
   steamName: string;
   playtimeMinutes: number;
+  status: "backlog" | "playing" | "completed" | "dropped";
   igdbMatch: {
     igdbId: number;
     name: string;
@@ -69,8 +70,7 @@ export async function POST(request: NextRequest) {
       gameRecord = inserted[0];
     }
 
-    // TODO: might change later but for now if a game has any playtime, it is marked as "playing"
-    const status = candidate.playtimeMinutes > 0 ? "playing" : "backlog";
+    const status = candidate.status;
 
     // skip inserting if the game was already in the user's list
     const existingUserGame = await db

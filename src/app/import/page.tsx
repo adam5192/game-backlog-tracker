@@ -9,6 +9,7 @@ type Candidate = {
   steamName: string;
   playtimeMinutes: number;
   igdbMatch: { igdbId: number; name: string; coverUrl: string | null } | null;
+  status: "backlog" | "playing" | "completed" | "dropped";
 };
 
 export default function ImportPage() {
@@ -18,6 +19,7 @@ export default function ImportPage() {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [importing, setImporting] = useState(false);
+  const [autoSorted, setAutoSorted] = useState(false); // tracks toggle state
   const router = useRouter();
 
   async function handleFetch() {
@@ -36,14 +38,58 @@ export default function ImportPage() {
       return;
     }
 
-    setCandidates(data.candidates);
+    // games will default to "backlog"
+    const withDefaults = data.candidates.map(
+      (c: Omit<Candidate, "status">) => ({
+        ...c,
+        status: "backlog" as const,
+      }),
+    );
+
+    setCandidates(withDefaults);
     // pre-select the games that found an igdb match
     // games with no match shown but unchecked so the user
     // can still see what got skipped
-    const matchedIds = data.candidates
+    const matchedIds = withDefaults
       .filter((c: Candidate) => c.igdbMatch)
       .map((c: Candidate) => c.steamAppId);
     setSelected(new Set(matchedIds));
+  }
+
+  function updateStatus(appId: number, status: Candidate["status"]) {
+    setCandidates((prev) =>
+      prev.map((c) => (c.steamAppId === appId ? { ...c, status } : c)),
+    );
+  }
+
+  // rough guess as to where each game should go (backlog, playing, completed, dropped)
+  // decided based on hours played
+  function toggleAutoSort() {
+    if (autoSorted) {
+      // toggle off, revert everything to "backlog"
+      setCandidates((prev) =>
+        prev.map((c) => ({ ...c, status: "backlog" as const })),
+      );
+      setAutoSorted(false);
+    } else {
+      // toggle-on, playtime-based guessing
+      setCandidates((prev) =>
+        prev.map((c) => {
+          const minutes = c.playtimeMinutes;
+          let status: Candidate["status"];
+          if (minutes < 120) {
+            status = "backlog"; // likely not played or not given a real chance
+          } else if (minutes < 600) {
+            status = "playing"; // probably made some decent progress
+          } else {
+            status = "completed"; // 10+ hours = probably finished or deeply played
+          }
+
+          return { ...c, status };
+        }),
+      );
+      setAutoSorted(true);
+    }
   }
 
   function toggleSelected(appId: number) {
@@ -105,6 +151,16 @@ export default function ImportPage() {
             import. Uncheck anything that matched incorrectly or that you
             don&apos;t want to import.
           </p>
+          <button
+            className={`text-xs px-3 py-1 ${
+              autoSorted
+                ? "bg-gray-100 text-gray-900"
+                : "border border-gray-700 text-gray-100"
+            }`}
+            onClick={toggleAutoSort}
+          >
+            {autoSorted ? "Auto-sort applied ✓" : "Auto-sort by playtime"}
+          </button>
 
           <ul className="space-y-2 mb-6 max-h-[60vh] overflow-y-auto">
             {candidates.map((c) => (
@@ -120,10 +176,9 @@ export default function ImportPage() {
                 <div className="flex-1">
                   <p className="text-sm text-gray-100">
                     {c.steamName}
-                    {/* show the matched igdb name only if it differs
-                        from the steam name; so the user can find mismatches easily*/}
                     {c.igdbMatch && c.igdbMatch.name !== c.steamName && (
                       <span className="text-gray-500">
+                        {" "}
                         → matched: {c.igdbMatch.name}
                       </span>
                     )}
@@ -134,6 +189,29 @@ export default function ImportPage() {
                     </p>
                   )}
                 </div>
+
+                {/* only show status buttons for games that are actually checked,
+                ignore unselected games */}
+                {selected.has(c.steamAppId) && (
+                  <div className="flex gap-1 flex-shrink-0">
+                    {(
+                      ["backlog", "playing", "completed", "dropped"] as const
+                    ).map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => updateStatus(c.steamAppId, s)}
+                        // highlight whichever status is currently selected for this game
+                        className={`text-xs px-2 py-1 rounded capitalize ${
+                          c.status === s
+                            ? "bg-gray-100 text-gray-900"
+                            : "border border-gray-700 text-gray-400"
+                        }`}
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </li>
             ))}
           </ul>
