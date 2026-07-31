@@ -5,6 +5,7 @@ import {
   numeric,
   date,
   timestamp,
+  unique,
 } from "drizzle-orm/pg-core";
 
 export const games = pgTable("games", {
@@ -22,21 +23,28 @@ export const games = pgTable("games", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const userGames = pgTable("user_games", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  userId: uuid("user_id").notNull(),
-  gameId: uuid("game_id")
-    .notNull()
-    .references(() => games.id),
-  status: text("status").notNull(), // 'backlog' | 'playing' | 'completed' | 'dropped'
-  rating: numeric("rating"),
-  notes: text("notes"),
-  startedAt: date("started_at"),
-  completedAt: date("completed_at"),
-  source: text("source"), // 'steam' | 'manual'
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
+export const userGames = pgTable(
+  "user_games",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").notNull(),
+    gameId: uuid("game_id")
+      .notNull()
+      .references(() => games.id),
+    status: text("status").notNull(),
+    rating: numeric("rating"),
+    notes: text("notes"),
+    startedAt: date("started_at"),
+    completedAt: date("completed_at"),
+    source: text("source"),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => ({
+    // games should be unique
+    userGameUnique: unique().on(table.userId, table.gameId),
+  }),
+);
 
 export const recommendations = pgTable("recommendations", {
   id: uuid("id").primaryKey().defaultRandom(),

@@ -21,11 +21,17 @@ export default function SearchPage() {
   }
 
   async function handleAdd(game: GameResult) {
-    await fetch("/api/games/add", {
+    const res = await fetch("/api/games/add", {
       method: "POST",
       headers: { "Content-Type": "application/JSON" },
       body: JSON.stringify({ ...game, status: "backlog" }),
     });
+
+    if (!res.ok) {
+      const data = await res.json();
+      alert(data.error ?? "Something went wrong adding this game.");
+      return;
+    }
     alert(`Added ${game.name} to your backlog!`);
   }
 

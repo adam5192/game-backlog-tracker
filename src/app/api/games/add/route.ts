@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 import { db } from "@/db";
 import { games, userGames } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { getTimeToBeatById } from "@/lib/igdb";
+import { error } from "console";
 // import { getMetacriticScore } from "@/lib/rawg";
 
 export async function POST(request: NextRequest) {
@@ -36,6 +37,20 @@ export async function POST(request: NextRequest) {
     .where(eq(games.igdbId, igdbId.toString()));
 
   let gameRecord = existing[0];
+
+  const alreadyHasGame = await db
+    .select()
+    .from(userGames)
+    .where(
+      and(eq(userGames.userId, user.id), eq(userGames.gameId, gameRecord.id)),
+    );
+
+  if (alreadyHasGame.length > 0) {
+    return NextResponse.json(
+      { error: "This game is already in your list." },
+      { status: 409 }, // "this already exists"
+    );
+  }
 
   // if doesnt exist, insert now
   if (!gameRecord) {
