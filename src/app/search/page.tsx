@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 
 type GameResult = {
   igdbId: number;
@@ -30,10 +31,10 @@ export default function SearchPage() {
 
     if (!res.ok) {
       const data = await res.json();
-      alert(data.error ?? "Something went wrong adding this game.");
+      toast.error(data.error ?? "Something went wrong adding this game.");
       return;
     }
-    alert(`Added ${game.name} to your backlog!`);
+    toast.success(`Added ${game.name} to your backlog!`);
   }
 
   return (

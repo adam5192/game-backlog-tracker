@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Image from "next/image";
+import { toast } from "sonner";
+import ConfirmDialog from "./ConfirmDialog";
 
 type GameDetail = {
   userGameId: string;
@@ -35,7 +37,7 @@ export default function GameDetailModal({ game, onClose }: Props) {
 
   async function handleSave() {
     setSaving(true);
-    await fetch(`/api/games/update`, {
+    const res = await fetch(`/api/games/update`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -46,21 +48,34 @@ export default function GameDetailModal({ game, onClose }: Props) {
       }),
     });
     setSaving(false);
+
+    if (!res.ok) {
+      toast.error("Couldn't save your changes. Try again.");
+      return;
+    }
+
+    toast.success("Changes saved");
     router.refresh(); // re-fetch the dashboard's server-side data
     onClose();
   }
 
+  const [confirmingDelete, setConfirmingDelete] = useState(false); // added
   async function handleDelete() {
-    const confirmed = window.confirm(`Remove ${game.name} from your list?`);
-    if (!confirmed) return;
-
     setSaving(true);
-    await fetch("/api/games/delete", {
+    const res = await fetch("/api/games/delete", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userGameId: game.userGameId }),
     });
     setSaving(false);
+    setConfirmingDelete(false);
+
+    if (!res.ok) {
+      toast.error("Couldnt't remove this game. Try again.");
+      return;
+    }
+
+    toast.success(`Removed ${game.name}`);
     router.refresh();
     onClose();
   }
@@ -161,12 +176,21 @@ export default function GameDetailModal({ game, onClose }: Props) {
 
             <button
               className="border border-red-600 text-red-400 px-4 py-2 disabled:opacity-50"
-              onClick={handleDelete}
+              onClick={() => setConfirmingDelete(true)}
               disabled={saving}
             >
               Remove
             </button>
           </div>
+
+          <ConfirmDialog
+            open={confirmingDelete}
+            title={`Remove ${game.name}?`}
+            description="This will remove it from your list. This can't be undone."
+            confirmLabel="Remove"
+            onConfirm={handleDelete}
+            onCancel={() => setConfirmingDelete(false)}
+          />
         </div>
       </div>
     </div>
