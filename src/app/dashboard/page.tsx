@@ -45,13 +45,14 @@ export default async function DashboardPage() {
     status: row.user_games.status,
     rating: row.user_games.rating ? Number(row.user_games.rating) : null,
     notes: row.user_games.notes,
+    releaseDate: row.games.releaseDate,
+    genres: row.games.genres ?? [],
+    createdAt: row.user_games.createdAt?.toString() ?? new Date().toISOString(),
   }));
 
   return (
-    <div className="p-8">
+    <div className="p-8 max-w-[1600px] mx-auto">
       <h1 className="text-2xl font-medium mb-6">Your Dashboard</h1>
-
-      <RecommendationCard />
 
       {myGames.length === 0 ? (
         <p className="text-gray-500">
