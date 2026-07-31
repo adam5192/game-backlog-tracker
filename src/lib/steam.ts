@@ -6,6 +6,7 @@ import {
   getFullCoverUrl,
   findExactIgdbMatch,
   getBlendedRating,
+  getGenreNames,
 } from "./igdb";
 
 // extract eitheer raw SteamID64 or a vanity name depending on format of user URL
@@ -69,6 +70,7 @@ export type SteamImportCandidate = {
     name: string;
     coverUrl: string | null;
     criticScore: number | null;
+    genres: string[];
   } | null;
 };
 
@@ -141,6 +143,7 @@ export async function matchGamesToIgdb(
           name: cached.name,
           coverUrl: cached.coverUrl,
           criticScore: cached.criticScore ? Number(cached.criticScore) : null,
+          genres: cached.genres ?? [],
         };
       } else {
         // STEP 1: try a direct exact-name match first
@@ -206,6 +209,7 @@ export async function matchGamesToIgdb(
             name: best.name,
             coverUrl: best.cover?.url ? getFullCoverUrl(best.cover.url) : null,
             criticScore: getBlendedRating(best),
+            genres: getGenreNames(best),
           };
         }
       }

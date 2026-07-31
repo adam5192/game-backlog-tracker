@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { searchIgdbGames, getFullCoverUrl, getBlendedRating } from "@/lib/igdb";
+import {
+  searchIgdbGames,
+  getFullCoverUrl,
+  getBlendedRating,
+  getGenreNames,
+} from "@/lib/igdb";
 
 // handle GET requests to /api/games/serach
 export async function GET(request: NextRequest) {
@@ -30,6 +35,7 @@ export async function GET(request: NextRequest) {
       ? new Date(game.first_release_date * 1000).toISOString().split("T")[0]
       : null,
     criticScore: getBlendedRating(game),
+    genres: getGenreNames(game),
   }));
 
   return NextResponse.json({ results });

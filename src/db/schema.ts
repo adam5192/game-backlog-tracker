@@ -17,6 +17,7 @@ export const games = pgTable("games", {
   description: text("description"),
   criticScore: numeric("critic_score"),
   releaseDate: date("release_date"),
+  genres: text("genres").array(),
   hltbMain: numeric("hltb_main"),
   hltbMainExtra: numeric("hltb_main_extra"),
   hltbCompletionist: numeric("hltb_completionist"),

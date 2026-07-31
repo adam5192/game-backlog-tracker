@@ -8,6 +8,7 @@ type GameResult = {
   coverUrl: string;
   criticScore: number | null;
   releaseDate: string;
+  genres: string[];
 };
 
 export default function SearchPage() {

@@ -28,6 +28,7 @@ export type IgdbGame = {
   first_release_date?: number; // unix timestamp (seconds)
   artworks?: { url: string }[];
   cover?: { url: string };
+  genres?: { name: string }[];
   total_rating_count?: number; // used as a tiebreaker for matching games
   aggregated_rating?: number; // critic average
   rating?: number; // user average
@@ -44,7 +45,7 @@ export async function searchIgdbGames(query: string): Promise<IgdbGame[]> {
       Authorization: `Bearer ${token}`,
     },
     // limit 15: gives the user enough real options to pick the right one
-    body: `search "${query}"; fields name,summary,first_release_date,artworks.url,cover.url,aggregated_rating,rating,total_rating_count; limit 15;`,
+    body: `search "${query}"; fields name,summary,first_release_date,artworks.url,cover.url,aggregated_rating,rating,total_rating_count, genres.name; limit 15;`,
   });
 
   const data = await res.json();
@@ -115,6 +116,10 @@ export function getBlendedRating(game: IgdbGame): number | null {
   return single != null ? Math.round(single) : null;
 }
 
+export function getGenreNames(game: IgdbGame): string[] {
+  return game.genres?.map((g) => g.name) ?? [];
+}
+
 // attempts a direct, exact-name lookup
 export async function findExactIgdbMatch(
   name: string,
@@ -129,7 +134,7 @@ export async function findExactIgdbMatch(
     },
     // if there are multiple exact matches, dont just trust whichever one comes back first
     // select the more popular option based on rating count
-    body: `fields name,summary,first_release_date,artworks.url,cover.url,aggregated_rating,rating,total_rating_count; where name = "${name}"; sort total_rating_count desc; limit 5;`,
+    body: `fields name,summary,first_release_date,artworks.url,cover.url,aggregated_rating,rating,total_rating_count, genres.name; where name = "${name}"; sort total_rating_count desc; limit 5;`,
   });
 
   const data = await res.json();

@@ -28,6 +28,7 @@ export async function POST(request: NextRequest) {
     releaseDate,
     status,
     criticScore,
+    genres,
   } = body;
 
   // check if game exists in local cache
@@ -37,20 +38,6 @@ export async function POST(request: NextRequest) {
     .where(eq(games.igdbId, igdbId.toString()));
 
   let gameRecord = existing[0];
-
-  const alreadyHasGame = await db
-    .select()
-    .from(userGames)
-    .where(
-      and(eq(userGames.userId, user.id), eq(userGames.gameId, gameRecord.id)),
-    );
-
-  if (alreadyHasGame.length > 0) {
-    return NextResponse.json(
-      { error: "This game is already in your list." },
-      { status: 409 }, // "this already exists"
-    );
-  }
 
   // if doesnt exist, insert now
   if (!gameRecord) {
@@ -89,12 +76,27 @@ export async function POST(request: NextRequest) {
         description,
         releaseDate,
         criticScore: criticScore?.toString() ?? null,
+        genres: genres ?? [],
         hltbMain: hltbData.hltbMain?.toString() ?? null,
         hltbMainExtra: hltbData.hltbMainExtra?.toString() ?? null,
         hltbCompletionist: hltbData.hltbCompletionist?.toString() ?? null,
       })
       .returning(); // tells postgres to hand back the row it just created
     gameRecord = inserted[0];
+  }
+
+  const alreadyHasGame = await db
+    .select()
+    .from(userGames)
+    .where(
+      and(eq(userGames.userId, user.id), eq(userGames.gameId, gameRecord.id)),
+    );
+
+  if (alreadyHasGame.length > 0) {
+    return NextResponse.json(
+      { error: "This game is already in your list." },
+      { status: 409 }, // "this already exists"
+    );
   }
 
   // create personal enntry to link user to this game
