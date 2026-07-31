@@ -69,6 +69,9 @@ export type SteamImportCandidate = {
     igdbId: number;
     name: string;
     coverUrl: string | null;
+    artworkUrl: string | null;
+    description: string | null;
+    releaseDate: string | null;
     criticScore: number | null;
     genres: string[];
   } | null;
@@ -142,6 +145,9 @@ export async function matchGamesToIgdb(
           igdbId: Number(cached.igdbId),
           name: cached.name,
           coverUrl: cached.coverUrl,
+          artworkUrl: cached.artworkUrl,
+          description: cached.description,
+          releaseDate: cached.releaseDate,
           criticScore: cached.criticScore ? Number(cached.criticScore) : null,
           genres: cached.genres ?? [],
         };
@@ -208,6 +214,17 @@ export async function matchGamesToIgdb(
             igdbId: best.id,
             name: best.name,
             coverUrl: best.cover?.url ? getFullCoverUrl(best.cover.url) : null,
+            artworkUrl: best.artworks?.[0]?.url
+              ? getFullCoverUrl(best.artworks[0].url)
+              : best.cover?.url
+                ? getFullCoverUrl(best.cover.url)
+                : null,
+            description: best.summary ?? null,
+            releaseDate: best.first_release_date
+              ? new Date(best.first_release_date * 1000)
+                  .toISOString()
+                  .split("T")[0]
+              : null,
             criticScore: getBlendedRating(best),
             genres: getGenreNames(best),
           };

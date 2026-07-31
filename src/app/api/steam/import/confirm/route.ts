@@ -14,7 +14,11 @@ type ConfirmedCandidate = {
     igdbId: number;
     name: string;
     coverUrl: string | null;
+    artworkUrl: string | null;
+    description: string | null;
+    releaseDate: string | null;
     criticScore: number | null;
+    genres: string[];
   };
 };
 
@@ -61,7 +65,11 @@ export async function POST(request: NextRequest) {
           igdbId: igdbId.toString(),
           name: candidate.igdbMatch.name,
           coverUrl: candidate.igdbMatch.coverUrl,
+          artworkUrl: candidate.igdbMatch.artworkUrl,
+          description: candidate.igdbMatch.description,
+          releaseDate: candidate.igdbMatch.releaseDate,
           criticScore: candidate.igdbMatch.criticScore?.toString() ?? null,
+          genres: candidate.igdbMatch.genres ?? [],
           hltbMain: hltbData.hltbMain?.toString() ?? null,
           hltbMainExtra: hltbData.hltbMainExtra?.toString() ?? null,
           hltbCompletionist: hltbData.hltbCompletionist?.toString() ?? null,
