@@ -1,11 +1,23 @@
+// persists across function calls so we dont after re-authenticate on every igdb request
+let cachedToken: { token: string; expiresAt: number } | null = null;
+
 // exchange client id + secret for temporary access token
 async function getIgdbAccessToken() {
-  const res = await fetch(
+  // if we already have a token that hasnt expired yet, reuse it
+  if (cachedToken && Date.now() < cachedToken.expiresAt) {
+    return cachedToken.token;
+  }
+  const res = await fetchWithTimeout(
     `https://id.twitch.tv/oauth2/token?client_id=${process.env.IGDB_CLIENT_ID}&client_secret=${process.env.IGDB_CLIENT_SECRET}&grant_type=client_credentials`,
     { method: "POST" },
   );
   const data = await res.json();
-  return data.access_token;
+
+  cachedToken = {
+    token: data.access_token,
+    expiresAt: Date.now() + (data.expires_in - 300) * 1000,
+  };
+  return cachedToken.token;
 }
 
 // shape of a single game result from igdb /games endpoint
@@ -25,7 +37,7 @@ export type IgdbGame = {
 export async function searchIgdbGames(query: string): Promise<IgdbGame[]> {
   const token = await getIgdbAccessToken();
 
-  const res = await fetch("https://api.igdb.com/v4/games", {
+  const res = await fetchWithTimeout("https://api.igdb.com/v4/games", {
     method: "POST",
     headers: {
       "Client-ID": process.env.IGDB_CLIENT_ID!,
@@ -43,14 +55,17 @@ export async function searchIgdbGames(query: string): Promise<IgdbGame[]> {
 export async function getTimeToBeatById(igdbGameId: number) {
   const token = await getIgdbAccessToken();
 
-  const res = await fetch("https://api.igdb.com/v4/game_time_to_beats", {
-    method: "POST",
-    headers: {
-      "Client-ID": process.env.IGDB_CLIENT_ID!,
-      Authorization: `Bearer ${token}`,
+  const res = await fetchWithTimeout(
+    "https://api.igdb.com/v4/game_time_to_beats",
+    {
+      method: "POST",
+      headers: {
+        "Client-ID": process.env.IGDB_CLIENT_ID!,
+        Authorization: `Bearer ${token}`,
+      },
+      body: `fields *; where game_id = ${igdbGameId};`,
     },
-    body: `fields *; where game_id = ${igdbGameId};`,
-  });
+  );
 
   const data = await res.json();
   const entry = Array.isArray(data) ? data[0] : null;
@@ -64,6 +79,24 @@ export async function getTimeToBeatById(igdbGameId: number) {
       ? Math.round(entry.completely / 3600)
       : null,
   };
+}
+
+async function fetchWithTimeout(
+  url: string,
+  options: RequestInit,
+  timeoutMs = 8000,
+) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 // upgrades cover URL to a proper https URL at a bigger size.
@@ -88,7 +121,7 @@ export async function findExactIgdbMatch(
 ): Promise<IgdbGame | null> {
   const token = await getIgdbAccessToken();
 
-  const res = await fetch("https://api.igdb.com/v4/games", {
+  const res = await fetchWithTimeout("https://api.igdb.com/v4/games", {
     method: "POST",
     headers: {
       "Client-ID": process.env.IGDB_CLIENT_ID!,

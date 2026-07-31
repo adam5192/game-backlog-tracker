@@ -1,3 +1,6 @@
+import { db } from "@/db";
+import { games } from "@/db/schema";
+import { ilike } from "drizzle-orm";
 import {
   searchIgdbGames,
   getFullCoverUrl,
@@ -69,6 +72,26 @@ export type SteamImportCandidate = {
   } | null;
 };
 
+// check our own table for matches before calling igdb (less api calls)
+async function findCachedMatch(name: string) {
+  // postgres ilike = case-insensitive
+  const exactHit = await db.select().from(games).where(ilike(games.name, name));
+
+  if (exactHit.length > 0) return exactHit[0];
+
+  // same logic as igdb fallback for colon title mismatch
+  if (name.includes(":")) {
+    const noColonName = name.replace(/:/g, " ").replace(/\s+/g, " ").trim();
+    const spacedHit = await db
+      .select()
+      .from(games)
+      .where(ilike(games.name, noColonName));
+    if (spacedHit.length > 0) return spacedHit[0];
+  }
+
+  return null;
+}
+
 // take raw steam library and try to find an igdb match for each game
 export async function matchGamesToIgdb(
   steamGames: { appid: number; name: string; playtime_forever: number }[],
@@ -109,69 +132,82 @@ export async function matchGamesToIgdb(
     const cleanedName = cleanGameName(steamGame.name);
 
     try {
-      // STEP 1: try a direct exact-name match first
-      let best = await findExactIgdbMatch(cleanedName);
+      // STEP 0: check own cache first
+      const cached = await findCachedMatch(cleanedName);
 
-      // STEP 2: fall back if no exact match exists
-      if (!best) {
-        let candidates = await searchIgdbGames(cleanedName);
+      if (cached) {
+        igdbMatch = {
+          igdbId: Number(cached.igdbId),
+          name: cached.name,
+          coverUrl: cached.coverUrl,
+          criticScore: cached.criticScore ? Number(cached.criticScore) : null,
+        };
+      } else {
+        // STEP 1: try a direct exact-name match first
+        let best = await findExactIgdbMatch(cleanedName);
 
-        // if the colon-preserving search returned few/no results, try again
-        // with the colon replaced by a space, since steam/igdb dont always
-        // agree on "title:sub" vs "title: sub"
-        if (candidates.length < 3 && cleanedName.includes(":")) {
-          const noColonName = cleanedName
-            .replace(/:/g, " ")
-            .replace(/\s+/g, " ")
-            .trim();
-          const altCandidates = await searchIgdbGames(noColonName);
-          const seen = new Set(candidates.map((c) => c.id));
-          for (const c of altCandidates) {
-            if (!seen.has(c.id)) {
-              candidates.push(c);
-              seen.add(c.id);
+        // STEP 2: fall back if no exact match exists
+        if (!best) {
+          let candidates = await searchIgdbGames(cleanedName);
+
+          // if the colon-preserving search returned few/no results, try again
+          // with the colon replaced by a space, since steam/igdb dont always
+          // agree on "title:sub" vs "title: sub"
+          if (candidates.length < 3 && cleanedName.includes(":")) {
+            const noColonName = cleanedName
+              .replace(/:/g, " ")
+              .replace(/\s+/g, " ")
+              .trim();
+            const altCandidates = await searchIgdbGames(noColonName);
+            const seen = new Set(candidates.map((c) => c.id));
+            for (const c of altCandidates) {
+              if (!seen.has(c.id)) {
+                candidates.push(c);
+                seen.add(c.id);
+              }
             }
           }
-        }
 
-        // if still nothing, try stripping a known publisher/franchise prefix
-        if (candidates.length === 0) {
-          const noPrefixName = stripBrandingPrefix(cleanedName);
-          if (noPrefixName !== cleanedName) {
-            candidates = await searchIgdbGames(noPrefixName);
+          // if still nothing, try stripping a known publisher/franchise prefix
+          if (candidates.length === 0) {
+            const noPrefixName = stripBrandingPrefix(cleanedName);
+            if (noPrefixName !== cleanedName) {
+              candidates = await searchIgdbGames(noPrefixName);
+            }
+          }
+
+          // if nothing came back, try again without extra suffixes
+          if (candidates.length === 0) {
+            const simplifiedName = stripEditionSuffix(cleanedName);
+            if (simplifiedName !== cleanedName) {
+              candidates = await searchIgdbGames(simplifiedName);
+            }
+          }
+
+          // prefer exact name match, fall back to best result
+          const exact = candidates.find(
+            (g) => g.name.toLowerCase() === cleanedName.toLowerCase(),
+          );
+
+          if (exact) {
+            best = exact;
+          } else if (candidates.length > 0) {
+            // prefer whichever candidate has the highest total_rating_count as a popularity signal
+            best = [...candidates].sort(
+              (a, b) =>
+                (b.total_rating_count ?? 0) - (a.total_rating_count ?? 0),
+            )[0];
           }
         }
 
-        // if nothing came back, try again without extra suffixes
-        if (candidates.length === 0) {
-          const simplifiedName = stripEditionSuffix(cleanedName);
-          if (simplifiedName !== cleanedName) {
-            candidates = await searchIgdbGames(simplifiedName);
-          }
+        if (best) {
+          igdbMatch = {
+            igdbId: best.id,
+            name: best.name,
+            coverUrl: best.cover?.url ? getFullCoverUrl(best.cover.url) : null,
+            criticScore: getBlendedRating(best),
+          };
         }
-
-        // prefer exact name match, fall back to best result
-        const exact = candidates.find(
-          (g) => g.name.toLowerCase() === cleanedName.toLowerCase(),
-        );
-
-        if (exact) {
-          best = exact;
-        } else if (candidates.length > 0) {
-          // prefer whichever candidate has the highest total_rating_count as a popularity signal
-          best = [...candidates].sort(
-            (a, b) => (b.total_rating_count ?? 0) - (a.total_rating_count ?? 0),
-          )[0];
-        }
-      }
-
-      if (best) {
-        igdbMatch = {
-          igdbId: best.id,
-          name: best.name,
-          coverUrl: best.cover?.url ? getFullCoverUrl(best.cover.url) : null,
-          criticScore: getBlendedRating(best),
-        };
       }
     } catch {
       // if lookup fails, skip
