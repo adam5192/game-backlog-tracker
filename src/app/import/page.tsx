@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
-// matches the shape returned by matchGamesToIgdb on the backend
 type Candidate = {
   steamAppId: number;
   steamName: string;
@@ -19,7 +19,7 @@ export default function ImportPage() {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [importing, setImporting] = useState(false);
-  const [autoSorted, setAutoSorted] = useState(false); // tracks toggle state
+  const [autoSorted, setAutoSorted] = useState(false);
   const [progress, setProgress] = useState<{
     current: number;
     total: number;
@@ -45,7 +45,7 @@ export default function ImportPage() {
     }
 
     const reader = res.body!.getReader();
-    const decoder = new TextDecoder(); // turn bytes into string
+    const decoder = new TextDecoder();
     let buffer = "";
 
     while (true) {
@@ -53,7 +53,6 @@ export default function ImportPage() {
       if (done) break;
 
       buffer += decoder.decode(value, { stream: true });
-
       const lines = buffer.split("\n");
       buffer = lines.pop() ?? "";
 
@@ -88,29 +87,20 @@ export default function ImportPage() {
     );
   }
 
-  // rough guess as to where each game should go (backlog, playing, completed, dropped)
-  // decided based on hours played
   function toggleAutoSort() {
     if (autoSorted) {
-      // toggle off, revert everything to "backlog"
       setCandidates((prev) =>
         prev.map((c) => ({ ...c, status: "backlog" as const })),
       );
       setAutoSorted(false);
     } else {
-      // toggle-on, playtime-based guessing
       setCandidates((prev) =>
         prev.map((c) => {
           const minutes = c.playtimeMinutes;
           let status: Candidate["status"];
-          if (minutes < 120) {
-            status = "backlog"; // likely not played or not given a real chance
-          } else if (minutes < 600) {
-            status = "playing"; // probably made some decent progress
-          } else {
-            status = "completed"; // 10+ hours = probably finished or deeply played
-          }
-
+          if (minutes < 120) status = "backlog";
+          else if (minutes < 600) status = "playing";
+          else status = "completed";
           return { ...c, status };
         }),
       );
@@ -119,47 +109,49 @@ export default function ImportPage() {
   }
 
   function toggleSelected(appId: number) {
-    // build a new set instead of mutating bc react needs a new object reference to detect the state change
     const next = new Set(selected);
-    if (next.has(appId)) {
-      next.delete(appId);
-    } else {
-      next.add(appId);
-    }
+    if (next.has(appId)) next.delete(appId);
+    else next.add(appId);
     setSelected(next);
   }
 
   async function handleImport() {
     setImporting(true);
-    // only send candidates the user left checked
     const toImport = candidates.filter((c) => selected.has(c.steamAppId));
 
-    await fetch("/api/steam/import/confirm", {
+    const res = await fetch("/api/steam/import/confirm", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ candidates: toImport }),
     });
 
     setImporting(false);
+
+    if (!res.ok) {
+      toast.error("Something went wrong importing your games.");
+      return;
+    }
+
+    toast.success(`Imported ${toImport.length} games`);
     router.push("/dashboard");
   }
 
   return (
     <div className="p-8 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-medium mb-4 text-gray-100">
+      <h1 className="text-2xl font-medium mb-6 text-gray-100">
         Import from Steam
       </h1>
 
       {candidates.length === 0 && (
         <div className="flex gap-2 mb-4">
           <input
-            className="border border-gray-700 p-2 flex-1 text-gray-100 placeholder-gray-500"
-            placeholder="Your steam profile URL or vanity name"
+            className="bg-gray-900 text-gray-100 placeholder-gray-500 px-4 py-2 rounded-lg flex-1 border border-gray-800 focus:border-gray-600 outline-none transition-colors"
+            placeholder="Your Steam profile URL or vanity name"
             value={profileInput}
             onChange={(e) => setProfileInput(e.target.value)}
           />
           <button
-            className="border border-gray-700 px-4 py-2 text-gray-100 disabled:opacity-50"
+            className="text-sm px-5 py-2 rounded-full bg-gray-100 text-gray-900 disabled:opacity-50"
             onClick={handleFetch}
             disabled={loading}
           >
@@ -168,7 +160,6 @@ export default function ImportPage() {
         </div>
       )}
 
-      {/* progress bar */}
       {loading && (
         <div className="mb-6">
           <div className="flex justify-between text-sm text-gray-400 mb-2">
@@ -187,7 +178,7 @@ export default function ImportPage() {
                   ? `${(progress.current / progress.total) * 100}%`
                   : "0%",
               }}
-            ></div>
+            />
           </div>
         </div>
       )}
@@ -196,32 +187,39 @@ export default function ImportPage() {
 
       {candidates.length > 0 && (
         <>
-          <p className="text-sm text-gray-400 mb-4">
-            Found {candidates.length} games — {selected.size} selected for
-            import. Uncheck anything that matched incorrectly or that you
-            don&apos;t want to import.
+          <div className="flex items-center justify-between mb-4">
+            <p className="text-sm text-gray-400">
+              Found {candidates.length} games : {selected.size} selected for
+              import.
+            </p>
+            <button
+              onClick={toggleAutoSort}
+              className={`text-xs px-4 py-1.5 rounded-full transition-colors ${
+                autoSorted
+                  ? "bg-gray-100 text-gray-900 font-medium"
+                  : "text-gray-400 hover:text-gray-100 hover:bg-gray-800 border border-gray-800"
+              }`}
+            >
+              {autoSorted ? "Auto-sort applied ✓" : "Auto-sort by playtime"}
+            </button>
+          </div>
+
+          <p className="text-xs text-gray-500 mb-4">
+            Uncheck anything that matched incorrectly or that you don&apos;t
+            want to import.
           </p>
-          <button
-            className={`text-xs px-3 py-1 ${
-              autoSorted
-                ? "bg-gray-100 text-gray-900"
-                : "border border-gray-700 text-gray-100"
-            }`}
-            onClick={toggleAutoSort}
-          >
-            {autoSorted ? "Auto-sort applied ✓" : "Auto-sort by playtime"}
-          </button>
 
           <ul className="space-y-2 mb-6 max-h-[60vh] overflow-y-auto">
             {candidates.map((c) => (
               <li
                 key={c.steamAppId}
-                className="flex items-center gap-3 border-b border-gray-700 pb-2"
+                className="flex items-center gap-3 border-b border-gray-800 pb-3"
               >
                 <input
                   type="checkbox"
                   checked={selected.has(c.steamAppId)}
                   onChange={() => toggleSelected(c.steamAppId)}
+                  className="accent-gray-100"
                 />
                 <div className="flex-1">
                   <p className="text-sm text-gray-100">
@@ -235,13 +233,11 @@ export default function ImportPage() {
                   </p>
                   {!c.igdbMatch && (
                     <p className="text-xs text-red-400">
-                      No IGDB match found - will be skipped
+                      No IGDB match found — will be skipped
                     </p>
                   )}
                 </div>
 
-                {/* only show status buttons for games that are actually checked,
-                ignore unselected games */}
                 {selected.has(c.steamAppId) && (
                   <div className="flex gap-1 flex-shrink-0">
                     {(
@@ -250,11 +246,10 @@ export default function ImportPage() {
                       <button
                         key={s}
                         onClick={() => updateStatus(c.steamAppId, s)}
-                        // highlight whichever status is currently selected for this game
-                        className={`text-xs px-2 py-1 rounded capitalize ${
+                        className={`text-xs px-3 py-1 rounded-full capitalize transition-colors ${
                           c.status === s
-                            ? "bg-gray-100 text-gray-900"
-                            : "border border-gray-700 text-gray-400"
+                            ? "bg-gray-100 text-gray-900 font-medium"
+                            : "text-gray-400 hover:text-gray-100 hover:bg-gray-800 border border-gray-800"
                         }`}
                       >
                         {s}
@@ -267,7 +262,7 @@ export default function ImportPage() {
           </ul>
 
           <button
-            className="border px-4 py-2 w-full bg-gray-100 text-gray-900 disabled:opacity-50"
+            className="w-full text-sm px-4 py-2.5 rounded-full bg-gray-100 text-gray-900 disabled:opacity-50"
             onClick={handleImport}
             disabled={importing || selected.size === 0}
           >

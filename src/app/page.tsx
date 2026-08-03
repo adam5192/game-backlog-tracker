@@ -6,37 +6,53 @@ import { Download, Sparkles, Clock3, SlidersHorizontal } from "lucide-react";
 import AuthModal from "@/components/AuthModal";
 
 const BACKDROP_COVERS = [
-  "https://images.igdb.com/igdb/image/upload/t_720p/co1nmw.jpg",
-  "https://images.igdb.com/igdb/image/upload/t_720p/co4i78.jpg",
-  "https://images.igdb.com/igdb/image/upload/t_720p/co6rzl.jpg",
-  "https://images.igdb.com/igdb/image/upload/t_720p/co1y2f.jpg",
-  "https://images.igdb.com/igdb/image/upload/t_720p/co1rs4.jpg",
-  "https://images.igdb.com/igdb/image/upload/t_720p/co3aet.jpg",
-  "https://images.igdb.com/igdb/image/upload/t_720p/co2mlj.jpg",
-  "https://images.igdb.com/igdb/image/upload/t_720p/co2n12.jpg",
-  "https://images.igdb.com/igdb/image/upload/t_720p/co1u60.jpg",
-  "https://images.igdb.com/igdb/image/upload/t_720p/co958d.jpg",
-  "https://images.igdb.com/igdb/image/upload/t_720p/co1qrs.jpg",
-  "https://images.igdb.com/igdb/image/upload/t_720p/co9ba3.jpg",
-  "https://images.igdb.com/igdb/image/upload/t_720p/coaamg.jpg",
-  "https://images.igdb.com/igdb/image/upload/t_720p/co3hfx.jpg",
-  "https://images.igdb.com/igdb/image/upload/t_720p/coabgu.jpg",
-  "https://images.igdb.com/igdb/image/upload/t_720p/co62ao.jpg",
-  "https://images.igdb.com/igdb/image/upload/t_720p/coacrk.jpg",
-  "https://images.igdb.com/igdb/image/upload/t_720p/co1v85.jpg",
+  "https://images.igdb.com/igdb/image/upload/t_720p/co2lbd.jpg",
   "https://images.igdb.com/igdb/image/upload/t_720p/coaarl.jpg",
-  "https://images.igdb.com/igdb/image/upload/t_720p/co2i0n.jpg",
-  "https://images.igdb.com/igdb/image/upload/t_720p/coaes9.jpg",
+  "https://images.igdb.com/igdb/image/upload/t_720p/co1rs4.jpg",
+  "https://images.igdb.com/igdb/image/upload/t_720p/cobt0i.jpg",
+  "https://images.igdb.com/igdb/image/upload/t_720p/co2lb9.jpg",
+  "https://images.igdb.com/igdb/image/upload/t_720p/coay61.jpg",
+  "https://images.igdb.com/igdb/image/upload/t_720p/co1q1f.jpg",
+  "https://images.igdb.com/igdb/image/upload/t_720p/co1r7f.jpg",
+  "https://images.igdb.com/igdb/image/upload/t_720p/cobkt6.jpg",
+  "https://images.igdb.com/igdb/image/upload/t_720p/co1nmw.jpg",
+  "https://images.igdb.com/igdb/image/upload/t_720p/co2mli.jpg",
+  "https://images.igdb.com/igdb/image/upload/t_720p/co1rcf.jpg",
+  "https://images.igdb.com/igdb/image/upload/t_720p/co2lbb.jpg",
+  "https://images.igdb.com/igdb/image/upload/t_720p/co3p2d.jpg",
+  "https://images.igdb.com/igdb/image/upload/t_720p/coc2ea.jpg",
+  "https://images.igdb.com/igdb/image/upload/t_720p/co20ac.jpg",
+  "https://images.igdb.com/igdb/image/upload/t_720p/co2n12.jpg",
+  "https://images.igdb.com/igdb/image/upload/t_720p/co1voh.jpg",
+  "https://images.igdb.com/igdb/image/upload/t_720p/co1r7h.jpg",
+  "https://images.igdb.com/igdb/image/upload/t_720p/co1voj.jpg",
+  "https://images.igdb.com/igdb/image/upload/t_720p/co1x7o.jpg",
+  "https://images.igdb.com/igdb/image/upload/t_720p/co2lcv.jpg",
+  "https://images.igdb.com/igdb/image/upload/t_720p/co2una.jpg",
+  "https://images.igdb.com/igdb/image/upload/t_720p/co1u60.jpg",
+  "https://images.igdb.com/igdb/image/upload/t_720p/co1rbu.jpg",
+  "https://images.igdb.com/igdb/image/upload/t_720p/co4jni.jpg",
+  "https://images.igdb.com/igdb/image/upload/t_720p/co1vpd.jpg",
+  "https://images.igdb.com/igdb/image/upload/t_720p/co1tnb.jpg",
+  "https://images.igdb.com/igdb/image/upload/t_720p/cobfzp.jpg",
+  "https://images.igdb.com/igdb/image/upload/t_720p/co3nnx.jpg",
+  "https://images.igdb.com/igdb/image/upload/t_720p/co1r77.jpg",
+  "https://images.igdb.com/igdb/image/upload/t_720p/coa77e.jpg",
+  "https://images.igdb.com/igdb/image/upload/t_720p/co721v.jpg",
+  "https://images.igdb.com/igdb/image/upload/t_720p/co8lo8.jpg",
   "https://images.igdb.com/igdb/image/upload/t_720p/cob9ed.jpg",
-  "https://images.igdb.com/igdb/image/upload/t_720p/co4aqi.jpg",
-  "https://images.igdb.com/igdb/image/upload/t_720p/co1rqa.jpg",
+  "https://images.igdb.com/igdb/image/upload/t_720p/co1nc7.jpg",
+  "https://images.igdb.com/igdb/image/upload/t_720p/coabgu.jpg",
+  "https://images.igdb.com/igdb/image/upload/t_720p/cob1t2.jpg",
+  "https://images.igdb.com/igdb/image/upload/t_720p/co1r8e.jpg",
+  "https://images.igdb.com/igdb/image/upload/t_720p/co2lbv.jpg",
 ];
 
 export default function Home() {
   const [authOpen, setAuthOpen] = useState(false);
 
   return (
-    <section className="relative h-screen overflow-hidden flex flex-col">
+    <section className="relative min-h-screen overflow-hidden flex flex-col">
       <div className="absolute inset-0 flex flex-wrap opacity-30">
         {Array.from({ length: 110 }).map((_, i) => (
           <div
@@ -55,24 +71,25 @@ export default function Home() {
         ))}
       </div>
       <div className="absolute inset-0 bg-gray-950/80" />
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-center text-center px-4">
-        <h1 className="text-3xl font-medium text-gray-100 mb-3 max-w-xl">
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center text-center px-4 py-16 lg:py-24">
+        <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-medium text-gray-100 mb-4 lg:mb-6 max-w-xl lg:max-w-2xl xl:max-w-3xl">
           Your game backlog, finally under control
         </h1>
-        <p className="text-gray-400 max-w-md mb-6 text-sm">
-          Track what you own, rate what you've played, and get AI-powered picks
-          for what to play next — pulled straight from your Steam library.
+        <p className="text-gray-400 max-w-md lg:max-w-lg xl:max-w-xl mb-8 lg:mb-10 text-sm lg:text-base xl:text-lg">
+          Track what you own, rate what you&apos;ve played, and get AI-powered
+          picks for what to play next, pulled straight from your personal
+          library.
         </p>
         <button
-          className="text-sm px-6 py-2 rounded-full bg-gray-100 text-gray-900"
+          className="text-sm lg:text-base px-6 lg:px-8 py-2.5 lg:py-3 rounded-full bg-gray-100 text-gray-900"
           onClick={() => setAuthOpen(true)}
         >
           Get started
         </button>
       </div>
 
-      <div className="relative z-10 max-w-5xl mx-auto px-6 pb-8 w-full">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+      <div className="relative z-10 max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto px-6 pb-12 lg:pb-16 w-full">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-5 lg:gap-6 xl:gap-8">
           <FeatureCard
             icon={<Download size={22} />}
             title="Steam import"
@@ -96,11 +113,11 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="relative z-10 text-center pb-3">
-        <p className="text-xs text-gray-500">
-          Built by [your name] ·{" "}
+      <div className="relative z-10 text-center pb-4 lg:pb-6">
+        <p className="text-xs lg:text-sm text-gray-500">
+          Built by [Adam Mokdad] ·{" "}
           <a
-            href="https://github.com/yourusername/game-backlog-tracker"
+            href="https://github.com/adam5192/game-backlog-tracker"
             className="text-gray-300 underline"
           >
             View on GitHub
@@ -123,12 +140,12 @@ function FeatureCard({
   description: string;
 }) {
   return (
-    <div className="bg-gray-900/85 border border-gray-800 rounded-2xl p-5">
-      <div className="w-10 h-10 rounded-full bg-gray-800 text-gray-100 flex items-center justify-center mb-3">
+    <div className="bg-gray-900/85 border border-gray-800 rounded-2xl p-5 lg:p-7">
+      <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-gray-800 text-gray-100 flex items-center justify-center mb-3 lg:mb-4">
         {icon}
       </div>
-      <h3 className="text-gray-100 font-medium mb-1.5">{title}</h3>
-      <p className="text-sm text-gray-400">{description}</p>
+      <h3 className="text-gray-100 font-medium mb-1.5 lg:text-lg">{title}</h3>
+      <p className="text-sm lg:text-base text-gray-400">{description}</p>
     </div>
   );
 }
