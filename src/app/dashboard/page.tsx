@@ -15,7 +15,7 @@ export default async function DashboardPage() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/login");
+    redirect("/");
   }
 
   // QUERY: get all user game entries, joined with games table (personal data + shared metaddata)
