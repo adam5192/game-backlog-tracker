@@ -5,6 +5,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { toast } from "sonner";
 import ConfirmDialog from "./ConfirmDialog";
+import StarRating from "./StarRating";
 
 type GameDetail = {
   userGameId: string;
@@ -28,11 +29,11 @@ type Props = {
 };
 
 export default function GameDetailModal({ game, onClose }: Props) {
-  // local state for editable fields, starts pre-filled with whatever the game has saved already
   const [status, setStatus] = useState(game.status);
-  const [rating, setRating] = useState(game.rating?.toString() ?? "");
+  const [rating, setRating] = useState(game.rating ?? 0);
   const [notes, setNotes] = useState(game.notes ?? "");
   const [saving, setSaving] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const router = useRouter();
 
   async function handleSave() {
@@ -43,7 +44,7 @@ export default function GameDetailModal({ game, onClose }: Props) {
       body: JSON.stringify({
         userGameId: game.userGameId,
         status,
-        rating: rating ? parseFloat(rating) : null,
+        rating: rating > 0 ? rating : null,
         notes,
       }),
     });
@@ -55,11 +56,10 @@ export default function GameDetailModal({ game, onClose }: Props) {
     }
 
     toast.success("Changes saved");
-    router.refresh(); // re-fetch the dashboard's server-side data
+    router.refresh();
     onClose();
   }
 
-  const [confirmingDelete, setConfirmingDelete] = useState(false); // added
   async function handleDelete() {
     setSaving(true);
     const res = await fetch("/api/games/delete", {
@@ -71,7 +71,7 @@ export default function GameDetailModal({ game, onClose }: Props) {
     setConfirmingDelete(false);
 
     if (!res.ok) {
-      toast.error("Couldnt't remove this game. Try again.");
+      toast.error("Couldn't remove this game. Try again.");
       return;
     }
 
@@ -81,8 +81,8 @@ export default function GameDetailModal({ game, onClose }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4">
-      <div className="bg-gray-900 border border-gray-700 rounded-lg max-w-md w-full overflow-hidden">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-40">
+      <div className="bg-gray-900 border border-gray-800 rounded-2xl max-w-md w-full overflow-hidden">
         <div className="aspect-video bg-gray-800 relative">
           {(game.artworkUrl ?? game.coverUrl) && (
             <Image
@@ -95,48 +95,49 @@ export default function GameDetailModal({ game, onClose }: Props) {
           )}
           <button
             onClick={onClose}
-            className="absolute top-2 right-2 bg-gray-900 text-gray-100 rounded-full w-7 h-7"
+            aria-label="Close"
+            className="absolute top-3 right-3 w-8 h-8 rounded-full bg-gray-900/80 text-gray-100 flex items-center justify-center hover:bg-gray-900 transition-colors"
           >
             ×
           </button>
         </div>
 
-        <div className="p-5">
+        <div className="p-6">
           <h2 className="text-xl font-medium mb-2 text-gray-100">
             {game.name}
           </h2>
 
           {game.description && (
-            <p className="text-sm text-gray-400 mb-4">{game.description}</p>
+            <p className="text-sm text-gray-400 mb-5">{game.description}</p>
           )}
 
-          <div
-            className="grid grid-cols-3 gap-3 mb-4"
-            title="A blended average of critic and user ratings from IGDB.com"
-          >
-            <div className="bg-gray-800 rounded p-3 text-center">
-              <p className="text-xs text-gray-500">IGDB rating</p>
+          <div className="grid grid-cols-3 gap-3 mb-5">
+            <div
+              className="bg-gray-800/60 rounded-xl p-3 text-center"
+              title="A blended average of critic and user ratings from IGDB.com"
+            >
+              <p className="text-xs text-gray-500 mb-1">IGDB rating</p>
               <p className="text-lg font-medium text-gray-100">
-                {game.criticScore ?? "-"}
+                {game.criticScore ?? "—"}
               </p>
             </div>
-            <div className="bg-gray-800 rounded p-3 text-center">
-              <p className="text-xs text-gray-500">Main Story</p>
+            <div className="bg-gray-800/60 rounded-xl p-3 text-center">
+              <p className="text-xs text-gray-500 mb-1">Main story</p>
               <p className="text-lg font-medium text-gray-100">
-                {game.hltbMain ?? "-"}h
+                {game.hltbMain ?? "—"}h
               </p>
             </div>
-            <div className="bg-gray-800 rounded p-3 text-center">
-              <p className="text-xs text-gray-500">Completionist</p>
+            <div className="bg-gray-800/60 rounded-xl p-3 text-center">
+              <p className="text-xs text-gray-500 mb-1">Completionist</p>
               <p className="text-lg font-medium text-gray-100">
-                {game.hltbCompletionist ?? "-"}h
+                {game.hltbCompletionist ?? "—"}h
               </p>
             </div>
           </div>
 
-          <label className="text-sm mb-1 block text-gray-400">Status</label>
+          <label className="text-sm text-gray-400 block mb-1.5">Status</label>
           <select
-            className="border border-gray-700 bg-gray-800 p-2 w-full mb-3 text-gray-100"
+            className="bg-gray-800 text-gray-100 px-4 py-2 rounded-lg w-full border border-gray-700 focus:border-gray-600 outline-none transition-colors mb-4"
             value={status}
             onChange={(e) => setStatus(e.target.value)}
           >
@@ -146,20 +147,16 @@ export default function GameDetailModal({ game, onClose }: Props) {
             <option value="dropped">Dropped</option>
           </select>
 
-          <label className="text-sm mb-1 block text-gray-400">
+          <label className="text-sm text-gray-400 block mb-2">
             Your rating
           </label>
-          <input
-            className="border border-gray-700 bg-gray-800 p-2 w-full mb-3 text-gray-100"
-            type="number"
-            step="0.1"
-            value={rating}
-            onChange={(e) => setRating(e.target.value)}
-          />
+          <div className="mb-4">
+            <StarRating value={rating} onChange={setRating} />
+          </div>
 
-          <label className="text-sm mb-1 block text-gray-400">Notes</label>
+          <label className="text-sm text-gray-400 block mb-1.5">Notes</label>
           <textarea
-            className="border border-gray-700 bg-gray-800 p-2 w-full mb-4 text-gray-100"
+            className="bg-gray-800 text-gray-100 px-4 py-2 rounded-lg w-full border border-gray-700 focus:border-gray-600 outline-none transition-colors mb-5 resize-none"
             rows={3}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
@@ -167,32 +164,31 @@ export default function GameDetailModal({ game, onClose }: Props) {
 
           <div className="flex gap-2">
             <button
-              className="border px-4 py-2 w-full bg-gray-100 text-gray-900 disabled:opacity-50"
+              className="text-sm px-4 py-2 rounded-full flex-1 bg-gray-100 text-gray-900 disabled:opacity-50"
               onClick={handleSave}
               disabled={saving}
             >
-              {saving ? "Saving..." : "Save Changes"}
+              {saving ? "Saving..." : "Save changes"}
             </button>
-
             <button
-              className="border border-red-600 text-red-400 px-4 py-2 disabled:opacity-50"
+              className="text-sm px-4 py-2 rounded-full bg-red-500/10 text-red-400 border border-red-900 hover:bg-red-500/20 transition-colors disabled:opacity-50"
               onClick={() => setConfirmingDelete(true)}
               disabled={saving}
             >
               Remove
             </button>
           </div>
-
-          <ConfirmDialog
-            open={confirmingDelete}
-            title={`Remove ${game.name}?`}
-            description="This will remove it from your list. This can't be undone."
-            confirmLabel="Remove"
-            onConfirm={handleDelete}
-            onCancel={() => setConfirmingDelete(false)}
-          />
         </div>
       </div>
+
+      <ConfirmDialog
+        open={confirmingDelete}
+        title={`Remove ${game.name}?`}
+        description="This will remove it from your list. This can't be undone."
+        confirmLabel="Remove"
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmingDelete(false)}
+      />
     </div>
   );
 }
