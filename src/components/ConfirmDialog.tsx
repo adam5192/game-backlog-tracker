@@ -20,8 +20,14 @@ export default function ConfirmDialog({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-gray-900 border border-gray-800 rounded-2xl max-w-sm w-full p-6">
+    <div
+      className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+      onClick={onCancel}
+    >
+      <div
+        className="bg-gray-900 border border-gray-800 rounded-2xl max-w-sm w-full p-6"
+        onClick={(e) => e.stopPropagation()}
+      >
         <h3 className="text-lg font-medium text-gray-100 mb-2">{title}</h3>
         {description && (
           <p className="text-sm text-gray-400 mb-6">{description}</p>

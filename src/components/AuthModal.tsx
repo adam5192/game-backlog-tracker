@@ -39,8 +39,14 @@ export default function AuthModal({ open, onClose }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-gray-900 border border-gray-800 rounded-2xl max-w-sm w-full p-6">
+    <div
+      className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+      onClick={onClose}
+    >
+      <div
+        className="bg-gray-900 border border-gray-800 rounded-2xl max-w-sm w-full p-6 relative"
+        onClick={(e) => e.stopPropagation()}
+      >
         <h3 className="text-lg font-medium text-gray-100 mb-1">
           {mode === "login" ? "Welcome back" : "Create an account"}
         </h3>
