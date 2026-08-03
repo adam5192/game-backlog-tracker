@@ -97,10 +97,12 @@ async function findCachedMatch(name: string) {
   return null;
 }
 
-// take raw steam library and try to find an igdb match for each game
-export async function matchGamesToIgdb(
-  steamGames: { appid: number; name: string; playtime_forever: number }[],
-): Promise<SteamImportCandidate[]> {
+// take raw steam library and try to find an igdb match the game one at a time so the API route can call it and report progress
+export async function matchGamesToIgdbSingle(steamGame: {
+  appid: number;
+  name: string;
+  playtime_forever: number;
+}): Promise<SteamImportCandidate> {
   function cleanGameName(name: string): string {
     return (
       name
@@ -132,115 +134,110 @@ export async function matchGamesToIgdb(
 
   const results: SteamImportCandidate[] = [];
 
-  for (const steamGame of steamGames) {
-    let igdbMatch: SteamImportCandidate["igdbMatch"] = null;
-    const cleanedName = cleanGameName(steamGame.name);
+  let igdbMatch: SteamImportCandidate["igdbMatch"] = null;
+  const cleanedName = cleanGameName(steamGame.name);
 
-    try {
-      // STEP 0: check own cache first
-      const cached = await findCachedMatch(cleanedName);
+  try {
+    // STEP 0: check own cache first
+    const cached = await findCachedMatch(cleanedName);
 
-      if (cached) {
-        igdbMatch = {
-          igdbId: Number(cached.igdbId),
-          name: cached.name,
-          coverUrl: cached.coverUrl,
-          artworkUrl: cached.artworkUrl,
-          description: cached.description,
-          releaseDate: cached.releaseDate,
-          criticScore: cached.criticScore ? Number(cached.criticScore) : null,
-          genres: cached.genres ?? [],
-        };
-      } else {
-        // STEP 1: try a direct exact-name match first
-        let best = await findExactIgdbMatch(cleanedName);
+    if (cached) {
+      igdbMatch = {
+        igdbId: Number(cached.igdbId),
+        name: cached.name,
+        coverUrl: cached.coverUrl,
+        artworkUrl: cached.artworkUrl,
+        description: cached.description,
+        releaseDate: cached.releaseDate,
+        criticScore: cached.criticScore ? Number(cached.criticScore) : null,
+        genres: cached.genres ?? [],
+      };
+    } else {
+      // STEP 1: try a direct exact-name match first
+      let best = await findExactIgdbMatch(cleanedName);
 
-        // STEP 2: fall back if no exact match exists
-        if (!best) {
-          let candidates = await searchIgdbGames(cleanedName);
+      // STEP 2: fall back if no exact match exists
+      if (!best) {
+        let candidates = await searchIgdbGames(cleanedName);
 
-          // if the colon-preserving search returned few/no results, try again
-          // with the colon replaced by a space, since steam/igdb dont always
-          // agree on "title:sub" vs "title: sub"
-          if (candidates.length < 3 && cleanedName.includes(":")) {
-            const noColonName = cleanedName
-              .replace(/:/g, " ")
-              .replace(/\s+/g, " ")
-              .trim();
-            const altCandidates = await searchIgdbGames(noColonName);
-            const seen = new Set(candidates.map((c) => c.id));
-            for (const c of altCandidates) {
-              if (!seen.has(c.id)) {
-                candidates.push(c);
-                seen.add(c.id);
-              }
+        // if the colon-preserving search returned few/no results, try again
+        // with the colon replaced by a space, since steam/igdb dont always
+        // agree on "title:sub" vs "title: sub"
+        if (candidates.length < 3 && cleanedName.includes(":")) {
+          const noColonName = cleanedName
+            .replace(/:/g, " ")
+            .replace(/\s+/g, " ")
+            .trim();
+          const altCandidates = await searchIgdbGames(noColonName);
+          const seen = new Set(candidates.map((c) => c.id));
+          for (const c of altCandidates) {
+            if (!seen.has(c.id)) {
+              candidates.push(c);
+              seen.add(c.id);
             }
-          }
-
-          // if still nothing, try stripping a known publisher/franchise prefix
-          if (candidates.length === 0) {
-            const noPrefixName = stripBrandingPrefix(cleanedName);
-            if (noPrefixName !== cleanedName) {
-              candidates = await searchIgdbGames(noPrefixName);
-            }
-          }
-
-          // if nothing came back, try again without extra suffixes
-          if (candidates.length === 0) {
-            const simplifiedName = stripEditionSuffix(cleanedName);
-            if (simplifiedName !== cleanedName) {
-              candidates = await searchIgdbGames(simplifiedName);
-            }
-          }
-
-          // prefer exact name match, fall back to best result
-          const exact = candidates.find(
-            (g) => g.name.toLowerCase() === cleanedName.toLowerCase(),
-          );
-
-          if (exact) {
-            best = exact;
-          } else if (candidates.length > 0) {
-            // prefer whichever candidate has the highest total_rating_count as a popularity signal
-            best = [...candidates].sort(
-              (a, b) =>
-                (b.total_rating_count ?? 0) - (a.total_rating_count ?? 0),
-            )[0];
           }
         }
 
-        if (best) {
-          igdbMatch = {
-            igdbId: best.id,
-            name: best.name,
-            coverUrl: best.cover?.url ? getFullCoverUrl(best.cover.url) : null,
-            artworkUrl: best.artworks?.[0]?.url
-              ? getFullCoverUrl(best.artworks[0].url)
-              : best.cover?.url
-                ? getFullCoverUrl(best.cover.url)
-                : null,
-            description: best.summary ?? null,
-            releaseDate: best.first_release_date
-              ? new Date(best.first_release_date * 1000)
-                  .toISOString()
-                  .split("T")[0]
-              : null,
-            criticScore: getBlendedRating(best),
-            genres: getGenreNames(best),
-          };
+        // if still nothing, try stripping a known publisher/franchise prefix
+        if (candidates.length === 0) {
+          const noPrefixName = stripBrandingPrefix(cleanedName);
+          if (noPrefixName !== cleanedName) {
+            candidates = await searchIgdbGames(noPrefixName);
+          }
+        }
+
+        // if nothing came back, try again without extra suffixes
+        if (candidates.length === 0) {
+          const simplifiedName = stripEditionSuffix(cleanedName);
+          if (simplifiedName !== cleanedName) {
+            candidates = await searchIgdbGames(simplifiedName);
+          }
+        }
+
+        // prefer exact name match, fall back to best result
+        const exact = candidates.find(
+          (g) => g.name.toLowerCase() === cleanedName.toLowerCase(),
+        );
+
+        if (exact) {
+          best = exact;
+        } else if (candidates.length > 0) {
+          // prefer whichever candidate has the highest total_rating_count as a popularity signal
+          best = [...candidates].sort(
+            (a, b) => (b.total_rating_count ?? 0) - (a.total_rating_count ?? 0),
+          )[0];
         }
       }
-    } catch {
-      // if lookup fails, skip
-    }
 
-    results.push({
-      steamAppId: steamGame.appid,
-      steamName: steamGame.name,
-      playtimeMinutes: steamGame.playtime_forever,
-      igdbMatch,
-    });
+      if (best) {
+        igdbMatch = {
+          igdbId: best.id,
+          name: best.name,
+          coverUrl: best.cover?.url ? getFullCoverUrl(best.cover.url) : null,
+          artworkUrl: best.artworks?.[0]?.url
+            ? getFullCoverUrl(best.artworks[0].url)
+            : best.cover?.url
+              ? getFullCoverUrl(best.cover.url)
+              : null,
+          description: best.summary ?? null,
+          releaseDate: best.first_release_date
+            ? new Date(best.first_release_date * 1000)
+                .toISOString()
+                .split("T")[0]
+            : null,
+          criticScore: getBlendedRating(best),
+          genres: getGenreNames(best),
+        };
+      }
+    }
+  } catch {
+    // if lookup fails, skip
   }
 
-  return results;
+  return {
+    steamAppId: steamGame.appid,
+    steamName: steamGame.name,
+    playtimeMinutes: steamGame.playtime_forever,
+    igdbMatch,
+  };
 }

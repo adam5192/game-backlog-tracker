@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
-import { resolveSteamId, getOwnedGames, matchGamesToIgdb } from "@/lib/steam";
+import {
+  resolveSteamId,
+  getOwnedGames,
+  matchGamesToIgdbSingle,
+} from "@/lib/steam";
 
 // this route handles RESOLVE + MATCHING
 // does not insert anything into database
@@ -39,7 +43,35 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const matched = await matchGamesToIgdb(steamGames);
+  // readablestream allows us to send data to client in chunks over time, so we can show a progress bar for import
+  const stream = new ReadableStream({
+    async start(controller) {
+      const encoder = new TextEncoder(); // convert to byte format for stream
+      const results = [];
 
-  return NextResponse.json({ candidates: matched });
+      for (const [i, steamGame] of steamGames.entries()) {
+        const matched = await matchGamesToIgdbSingle(steamGame);
+        results.push(matched);
+
+        // send a progress update after each game
+        const progressUpdate =
+          JSON.stringify({
+            type: "progress",
+            current: i + 1,
+            total: steamGames.length,
+          }) + "\n";
+        controller.enqueue(encoder.encode(progressUpdate)); // send the chunk rn
+      }
+
+      // final message: the complete results when everything is done
+      const finalUpdate =
+        JSON.stringify({ type: "done", candidates: results }) + "\n";
+      controller.enqueue(encoder.encode(finalUpdate));
+      controller.close();
+    },
+  });
+
+  return new Response(stream, {
+    headers: { "Content-Type": "text/plain; charset=utf-8" }, // chunks are being delivered as they arrive rather than waiting for a final return
+  });
 }

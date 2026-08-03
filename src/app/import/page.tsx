@@ -20,40 +20,66 @@ export default function ImportPage() {
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [importing, setImporting] = useState(false);
   const [autoSorted, setAutoSorted] = useState(false); // tracks toggle state
+  const [progress, setProgress] = useState<{
+    current: number;
+    total: number;
+  } | null>(null);
   const router = useRouter();
 
   async function handleFetch() {
     setLoading(true);
     setError("");
+    setProgress(null);
+
     const res = await fetch("/api/steam/import", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ profileInput }),
     });
-    const data = await res.json();
-    setLoading(false);
 
     if (!res.ok) {
+      const data = await res.json();
       setError(data.error);
+      setLoading(false);
       return;
     }
 
-    // games will default to "backlog"
-    const withDefaults = data.candidates.map(
-      (c: Omit<Candidate, "status">) => ({
-        ...c,
-        status: "backlog" as const,
-      }),
-    );
+    const reader = res.body!.getReader();
+    const decoder = new TextDecoder(); // turn bytes into string
+    let buffer = "";
 
-    setCandidates(withDefaults);
-    // pre-select the games that found an igdb match
-    // games with no match shown but unchecked so the user
-    // can still see what got skipped
-    const matchedIds = withDefaults
-      .filter((c: Candidate) => c.igdbMatch)
-      .map((c: Candidate) => c.steamAppId);
-    setSelected(new Set(matchedIds));
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+
+      const lines = buffer.split("\n");
+      buffer = lines.pop() ?? "";
+
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        const update = JSON.parse(line);
+
+        if (update.type === "progress") {
+          setProgress({ current: update.current, total: update.total });
+        } else if (update.type === "done") {
+          const withDefaults = update.candidates.map(
+            (c: Omit<Candidate, "status">) => ({
+              ...c,
+              status: "backlog" as const,
+            }),
+          );
+          setCandidates(withDefaults);
+          const matchedIds = withDefaults
+            .filter((c: Candidate) => c.igdbMatch)
+            .map((c: Candidate) => c.steamAppId);
+          setSelected(new Set(matchedIds));
+        }
+      }
+    }
+
+    setLoading(false);
   }
 
   function updateStatus(appId: number, status: Candidate["status"]) {
@@ -139,6 +165,30 @@ export default function ImportPage() {
           >
             {loading ? "Fetching..." : "Fetch library"}
           </button>
+        </div>
+      )}
+
+      {/* progress bar */}
+      {loading && (
+        <div className="mb-6">
+          <div className="flex justify-between text-sm text-gray-400 mb-2">
+            <span>Matching your library...</span>
+            {progress && (
+              <span>
+                {progress.current} / {progress.total}
+              </span>
+            )}
+          </div>
+          <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gray-100 rounded-full transition-all duration-300"
+              style={{
+                width: progress
+                  ? `${(progress.current / progress.total) * 100}%`
+                  : "0%",
+              }}
+            ></div>
+          </div>
         </div>
       )}
 
