@@ -1,26 +1,48 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f6f7ee;
+  --foreground: #1a2419;
+  --surface-1: #edf0e0;
+  --surface-2: #ffffff;
+  --border-color: #dbe0c9;
+  --text-secondary: #62705d;
+  --accent: #8a6d1f;
+  --accent-foreground: #ffffff;
+  --danger: #b23b34;
+  --danger-foreground: #ffffff;
+}
+
+.dark {
+  --background: #0f1712;
+  --foreground: #eaf2ea;
+  --surface-1: #16211a;
+  --surface-2: #1c2b21;
+  --border-color: #2d4033;
+  --text-secondary: #91a893;
+  --accent: #d4a94a;
+  --accent-foreground: #0f1712;
+  --danger: #e6635c;
+  --danger-foreground: #0f1712;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-border-color: var(--border-color);
+  --color-text-secondary: var(--text-secondary);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-danger: var(--danger);
+  --color-danger-foreground: var(--danger-foreground);
+  --font-sans: var(--font-space-grotesk);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
 }

@@ -27,7 +27,7 @@ export default function StarRatings({ value, onChange }: Props) {
             {/* outline star sits underneath as the empty base layer */}
             <Star
               size={24}
-              className="absolute inset-0 text-gray-700"
+              className="absolute inset-0 text-border-color"
               strokeWidth={1.5}
             />
             {/* filled star (or half) sits on top */}
@@ -62,7 +62,7 @@ export default function StarRatings({ value, onChange }: Props) {
       })}
       {/* text next to the stars, so the exact value is
           always visible */}
-      <span className="text-sm text-gray-400 ml-2 self-center">
+      <span className="text-sm text-text-secondary ml-2 self-center">
         {value > 0 ? `${value}/10` : "Not rated"}
       </span>
     </div>

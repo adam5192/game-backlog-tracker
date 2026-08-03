@@ -82,8 +82,8 @@ export default function GameDetailModal({ game, onClose }: Props) {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-40">
-      <div className="bg-gray-900 border border-gray-800 rounded-2xl max-w-md w-full overflow-hidden">
-        <div className="aspect-video bg-gray-800 relative">
+      <div className="bg-surface-1 border border-border-color rounded-2xl max-w-md w-full overflow-hidden">
+        <div className="aspect-video bg-surface-2 relative">
           {(game.artworkUrl ?? game.coverUrl) && (
             <Image
               src={game.artworkUrl ?? game.coverUrl ?? ""}
@@ -96,48 +96,48 @@ export default function GameDetailModal({ game, onClose }: Props) {
           <button
             onClick={onClose}
             aria-label="Close"
-            className="absolute top-3 right-3 w-8 h-8 rounded-full bg-gray-900/80 text-gray-100 flex items-center justify-center hover:bg-gray-900 transition-colors"
+            className="absolute top-3 right-3 w-8 h-8 rounded-full bg-surface-1/80 text-foreground flex items-center justify-center hover:bg-surface-1 transition-colors"
           >
             ×
           </button>
         </div>
 
         <div className="p-6">
-          <h2 className="text-xl font-medium mb-2 text-gray-100">
+          <h2 className="text-xl font-medium mb-2 text-foreground">
             {game.name}
           </h2>
 
           {game.description && (
-            <p className="text-sm text-gray-400 mb-5">{game.description}</p>
+            <p className="text-sm text-text-secondary mb-5">{game.description}</p>
           )}
 
           <div className="grid grid-cols-3 gap-3 mb-5">
             <div
-              className="bg-gray-800/60 rounded-xl p-3 text-center"
+              className="bg-surface-2/60 rounded-xl p-3 text-center"
               title="A blended average of critic and user ratings from IGDB.com"
             >
-              <p className="text-xs text-gray-500 mb-1">IGDB rating</p>
-              <p className="text-lg font-medium text-gray-100">
+              <p className="text-xs text-text-secondary mb-1">IGDB rating</p>
+              <p className="text-lg font-medium text-foreground">
                 {game.criticScore ?? "—"}
               </p>
             </div>
-            <div className="bg-gray-800/60 rounded-xl p-3 text-center">
-              <p className="text-xs text-gray-500 mb-1">Main story</p>
-              <p className="text-lg font-medium text-gray-100">
+            <div className="bg-surface-2/60 rounded-xl p-3 text-center">
+              <p className="text-xs text-text-secondary mb-1">Main story</p>
+              <p className="text-lg font-medium text-foreground">
                 {game.hltbMain ?? "—"}h
               </p>
             </div>
-            <div className="bg-gray-800/60 rounded-xl p-3 text-center">
-              <p className="text-xs text-gray-500 mb-1">Completionist</p>
-              <p className="text-lg font-medium text-gray-100">
+            <div className="bg-surface-2/60 rounded-xl p-3 text-center">
+              <p className="text-xs text-text-secondary mb-1">Completionist</p>
+              <p className="text-lg font-medium text-foreground">
                 {game.hltbCompletionist ?? "—"}h
               </p>
             </div>
           </div>
 
-          <label className="text-sm text-gray-400 block mb-1.5">Status</label>
+          <label className="text-sm text-text-secondary block mb-1.5">Status</label>
           <select
-            className="bg-gray-800 text-gray-100 px-4 py-2 rounded-lg w-full border border-gray-700 focus:border-gray-600 outline-none transition-colors mb-4"
+            className="bg-surface-2 text-foreground px-4 py-2 rounded-lg w-full border border-border-color focus:border-accent outline-none transition-colors mb-4"
             value={status}
             onChange={(e) => setStatus(e.target.value)}
           >
@@ -147,16 +147,16 @@ export default function GameDetailModal({ game, onClose }: Props) {
             <option value="dropped">Dropped</option>
           </select>
 
-          <label className="text-sm text-gray-400 block mb-2">
+          <label className="text-sm text-text-secondary block mb-2">
             Your rating
           </label>
           <div className="mb-4">
             <StarRating value={rating} onChange={setRating} />
           </div>
 
-          <label className="text-sm text-gray-400 block mb-1.5">Notes</label>
+          <label className="text-sm text-text-secondary block mb-1.5">Notes</label>
           <textarea
-            className="bg-gray-800 text-gray-100 px-4 py-2 rounded-lg w-full border border-gray-700 focus:border-gray-600 outline-none transition-colors mb-5 resize-none"
+            className="bg-surface-2 text-foreground px-4 py-2 rounded-lg w-full border border-border-color focus:border-accent outline-none transition-colors mb-5 resize-none"
             rows={3}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
@@ -164,14 +164,14 @@ export default function GameDetailModal({ game, onClose }: Props) {
 
           <div className="flex gap-2">
             <button
-              className="text-sm px-4 py-2 rounded-full flex-1 bg-gray-100 text-gray-900 disabled:opacity-50"
+              className="text-sm px-4 py-2 rounded-full flex-1 bg-accent text-accent-foreground disabled:opacity-50"
               onClick={handleSave}
               disabled={saving}
             >
               {saving ? "Saving..." : "Save changes"}
             </button>
             <button
-              className="text-sm px-4 py-2 rounded-full bg-red-500/10 text-red-400 border border-red-900 hover:bg-red-500/20 transition-colors disabled:opacity-50"
+              className="text-sm px-4 py-2 rounded-full bg-danger/10 text-danger border border-danger hover:bg-danger/20 transition-colors disabled:opacity-50"
               onClick={() => setConfirmingDelete(true)}
               disabled={saving}
             >

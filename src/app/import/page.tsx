@@ -138,20 +138,20 @@ export default function ImportPage() {
 
   return (
     <div className="p-8 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-medium mb-6 text-gray-100">
+      <h1 className="text-2xl font-medium mb-6 text-foreground">
         Import from Steam
       </h1>
 
       {candidates.length === 0 && (
         <div className="flex gap-2 mb-4">
           <input
-            className="bg-gray-900 text-gray-100 placeholder-gray-500 px-4 py-2 rounded-lg flex-1 border border-gray-800 focus:border-gray-600 outline-none transition-colors"
+            className="bg-surface-1 text-foreground placeholder-text-secondary px-4 py-2 rounded-lg flex-1 border border-border-color focus:border-accent outline-none transition-colors"
             placeholder="Your Steam profile URL or vanity name"
             value={profileInput}
             onChange={(e) => setProfileInput(e.target.value)}
           />
           <button
-            className="text-sm px-5 py-2 rounded-full bg-gray-100 text-gray-900 disabled:opacity-50"
+            className="text-sm px-5 py-2 rounded-full bg-accent text-accent-foreground disabled:opacity-50"
             onClick={handleFetch}
             disabled={loading}
           >
@@ -162,7 +162,7 @@ export default function ImportPage() {
 
       {loading && (
         <div className="mb-6">
-          <div className="flex justify-between text-sm text-gray-400 mb-2">
+          <div className="flex justify-between text-sm text-text-secondary mb-2">
             <span>Matching your library...</span>
             {progress && (
               <span>
@@ -170,9 +170,9 @@ export default function ImportPage() {
               </span>
             )}
           </div>
-          <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+          <div className="h-2 bg-surface-2 rounded-full overflow-hidden">
             <div
-              className="h-full bg-gray-100 rounded-full transition-all duration-300"
+              className="h-full bg-accent rounded-full transition-all duration-300"
               style={{
                 width: progress
                   ? `${(progress.current / progress.total) * 100}%`
@@ -183,12 +183,12 @@ export default function ImportPage() {
         </div>
       )}
 
-      {error && <p className="text-red-400 text-sm mb-4">{error}</p>}
+      {error && <p className="text-danger text-sm mb-4">{error}</p>}
 
       {candidates.length > 0 && (
         <>
           <div className="flex items-center justify-between mb-4">
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-text-secondary">
               Found {candidates.length} games : {selected.size} selected for
               import.
             </p>
@@ -196,15 +196,15 @@ export default function ImportPage() {
               onClick={toggleAutoSort}
               className={`text-xs px-4 py-1.5 rounded-full transition-colors ${
                 autoSorted
-                  ? "bg-gray-100 text-gray-900 font-medium"
-                  : "text-gray-400 hover:text-gray-100 hover:bg-gray-800 border border-gray-800"
+                  ? "bg-accent text-accent-foreground font-medium"
+                  : "text-text-secondary hover:text-foreground hover:bg-surface-2 border border-border-color"
               }`}
             >
               {autoSorted ? "Auto-sort applied ✓" : "Auto-sort by playtime"}
             </button>
           </div>
 
-          <p className="text-xs text-gray-500 mb-4">
+          <p className="text-xs text-text-secondary mb-4">
             Uncheck anything that matched incorrectly or that you don&apos;t
             want to import.
           </p>
@@ -213,26 +213,26 @@ export default function ImportPage() {
             {candidates.map((c) => (
               <li
                 key={c.steamAppId}
-                className="flex items-center gap-3 border-b border-gray-800 pb-3"
+                className="flex items-center gap-3 border-b border-border-color pb-3"
               >
                 <input
                   type="checkbox"
                   checked={selected.has(c.steamAppId)}
                   onChange={() => toggleSelected(c.steamAppId)}
-                  className="accent-gray-100"
+                  className="accent-accent"
                 />
                 <div className="flex-1">
-                  <p className="text-sm text-gray-100">
+                  <p className="text-sm text-foreground">
                     {c.steamName}
                     {c.igdbMatch && c.igdbMatch.name !== c.steamName && (
-                      <span className="text-gray-500">
+                      <span className="text-text-secondary">
                         {" "}
                         → matched: {c.igdbMatch.name}
                       </span>
                     )}
                   </p>
                   {!c.igdbMatch && (
-                    <p className="text-xs text-red-400">
+                    <p className="text-xs text-danger">
                       No IGDB match found — will be skipped
                     </p>
                   )}
@@ -248,8 +248,8 @@ export default function ImportPage() {
                         onClick={() => updateStatus(c.steamAppId, s)}
                         className={`text-xs px-3 py-1 rounded-full capitalize transition-colors ${
                           c.status === s
-                            ? "bg-gray-100 text-gray-900 font-medium"
-                            : "text-gray-400 hover:text-gray-100 hover:bg-gray-800 border border-gray-800"
+                            ? "bg-accent text-accent-foreground font-medium"
+                            : "text-text-secondary hover:text-foreground hover:bg-surface-2 border border-border-color"
                         }`}
                       >
                         {s}
@@ -262,7 +262,7 @@ export default function ImportPage() {
           </ul>
 
           <button
-            className="w-full text-sm px-4 py-2.5 rounded-full bg-gray-100 text-gray-900 disabled:opacity-50"
+            className="w-full text-sm px-4 py-2.5 rounded-full bg-accent text-accent-foreground disabled:opacity-50"
             onClick={handleImport}
             disabled={importing || selected.size === 0}
           >

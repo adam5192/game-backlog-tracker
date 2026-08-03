@@ -100,13 +100,13 @@ export default function GameList({ games }: Props) {
       {/* search + sort row */}
       <div className="flex gap-2 mb-4">
         <input
-          className="bg-gray-900 text-gray-100 placeholder-gray-500 px-4 py-2 rounded-lg flex-1 border border-gray-800 focus:border-gray-600 outline-none transition-colors"
+          className="bg-surface-1 text-foreground placeholder-text-secondary px-4 py-2 rounded-lg flex-1 border border-border-color focus:border-accent outline-none transition-colors"
           placeholder="Search your games..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
         <select
-          className="bg-gray-900 text-gray-100 px-4 py-2 rounded-lg w-48 border border-gray-800 focus:border-gray-600 outline-none transition-colors"
+          className="bg-surface-1 text-foreground px-4 py-2 rounded-lg w-48 border border-border-color focus:border-accent outline-none transition-colors"
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value as SortOption)}
         >
@@ -126,8 +126,8 @@ export default function GameList({ games }: Props) {
             onClick={() => setSelectedGenre(null)}
             className={`text-xs px-3 py-1 rounded-full ${
               selectedGenre === null
-                ? "bg-gray-100 text-gray-900"
-                : "border border-gray-700 text-gray-400"
+                ? "bg-accent text-accent-foreground"
+                : "border border-border-color text-text-secondary"
             }`}
           >
             All
@@ -141,8 +141,8 @@ export default function GameList({ games }: Props) {
               // clicking the already-selected genre toggles it back off
               className={`text-xs px-3 py-1 rounded-full ${
                 selectedGenre === genre
-                  ? "bg-gray-100 text-gray-900"
-                  : "border border-gray-700 text-gray-400"
+                  ? "bg-accent text-accent-foreground"
+                  : "border border-border-color text-text-secondary"
               }`}
             >
               {genre}
@@ -152,15 +152,15 @@ export default function GameList({ games }: Props) {
       )}
 
       {/* status tabs */}
-      <div className="flex gap-2 border-b border-gray-700 pb-3 mb-4">
+      <div className="flex gap-2 border-b border-border-color pb-3 mb-4">
         {STATUSES.map((s) => (
           <button
             key={s}
             onClick={() => setStatusFilter(s)}
             className={`capitalize text-sm px-4 py-1.5 rounded-full transistion-colors ${
               statusFilter === s
-                ? "bg-gray-100 text-gray-900"
-                : "border border-gray-700 text-gray-100"
+                ? "bg-accent text-accent-foreground"
+                : "border border-border-color text-foreground"
             }`}
           >
             {s}
@@ -171,16 +171,16 @@ export default function GameList({ games }: Props) {
       <RecommendationCard />
 
       {filteredGames.length === 0 ? (
-        <p className="text-gray-500 text-sm">No games match your filters.</p>
+        <p className="text-text-secondary text-sm">No games match your filters.</p>
       ) : (
         <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-7 xl:grid-cols-8 gap-3">
           {filteredGames.map((game) => (
             <button
               key={game.userGameId}
-              className="text-left border border-gray-700 rounded-lg overflow-hidden"
+              className="text-left border border-border-color rounded-lg overflow-hidden"
               onClick={() => setSelectedGame(game)}
             >
-              <div className="aspect-3/4 bg-gray-800 relative">
+              <div className="aspect-3/4 bg-surface-2 relative">
                 {game.coverUrl && (
                   <Image
                     src={game.coverUrl}
@@ -192,11 +192,11 @@ export default function GameList({ games }: Props) {
                 )}
               </div>
               <div className="p-2">
-                <p className="text-sm font-medium truncate text-gray-100">
+                <p className="text-sm font-medium truncate text-foreground">
                   {game.name}
                 </p>
                 {/* show status badge always when viewing "All" */}
-                <p className="text-xs text-gray-500 capitalize">
+                <p className="text-xs text-text-secondary capitalize">
                   {game.status}
                 </p>
               </div>

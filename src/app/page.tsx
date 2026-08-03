@@ -70,18 +70,18 @@ export default function Home() {
           </div>
         ))}
       </div>
-      <div className="absolute inset-0 bg-gray-950/80" />
+      <div className="absolute inset-0 bg-background/80" />
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center text-center px-4 py-16 lg:py-24">
-        <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-medium text-gray-100 mb-4 lg:mb-6 max-w-xl lg:max-w-2xl xl:max-w-3xl">
+        <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-medium text-foreground mb-4 lg:mb-6 max-w-xl lg:max-w-2xl xl:max-w-3xl">
           Your game backlog, finally under control
         </h1>
-        <p className="text-gray-400 max-w-md lg:max-w-lg xl:max-w-xl mb-8 lg:mb-10 text-sm lg:text-base xl:text-lg">
+        <p className="text-text-secondary max-w-md lg:max-w-lg xl:max-w-xl mb-8 lg:mb-10 text-sm lg:text-base xl:text-lg">
           Track what you own, rate what you&apos;ve played, and get AI-powered
           picks for what to play next, pulled straight from your personal
           library.
         </p>
         <button
-          className="text-sm lg:text-base px-6 lg:px-8 py-2.5 lg:py-3 rounded-full bg-gray-100 text-gray-900"
+          className="text-sm lg:text-base px-6 lg:px-8 py-2.5 lg:py-3 rounded-full bg-accent text-accent-foreground"
           onClick={() => setAuthOpen(true)}
         >
           Get started
@@ -114,11 +114,11 @@ export default function Home() {
       </div>
 
       <div className="relative z-10 text-center pb-4 lg:pb-6">
-        <p className="text-xs lg:text-sm text-gray-500">
+        <p className="text-xs lg:text-sm text-text-secondary">
           Built by [Adam Mokdad] ·{" "}
           <a
             href="https://github.com/adam5192/game-backlog-tracker"
-            className="text-gray-300 underline"
+            className="text-text-secondary underline"
           >
             View on GitHub
           </a>
@@ -140,12 +140,12 @@ function FeatureCard({
   description: string;
 }) {
   return (
-    <div className="bg-gray-900/85 border border-gray-800 rounded-2xl p-5 lg:p-7">
-      <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-gray-800 text-gray-100 flex items-center justify-center mb-3 lg:mb-4">
+    <div className="bg-surface-1/85 border border-border-color rounded-2xl p-5 lg:p-7">
+      <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-surface-2 text-foreground flex items-center justify-center mb-3 lg:mb-4">
         {icon}
       </div>
-      <h3 className="text-gray-100 font-medium mb-1.5 lg:text-lg">{title}</h3>
-      <p className="text-sm lg:text-base text-gray-400">{description}</p>
+      <h3 className="text-foreground font-medium mb-1.5 lg:text-lg">{title}</h3>
+      <p className="text-sm lg:text-base text-text-secondary">{description}</p>
     </div>
   );
 }

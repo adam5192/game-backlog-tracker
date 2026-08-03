@@ -61,8 +61,8 @@ export default function RecommendationCard() {
 
   if (loading) {
     return (
-      <div className="bg-gray-900 border border-gray-700 rounded-lg p-4 mb-6 animate-pulse">
-        <p className="text-sm text-gray-500">Finding your next game...</p>
+      <div className="bg-surface-1 border border-border-color rounded-lg p-4 mb-6 animate-pulse">
+        <p className="text-sm text-text-secondary">Finding your next game...</p>
       </div>
     );
   }
@@ -74,7 +74,7 @@ export default function RecommendationCard() {
   const current = recommendations[index];
 
   return (
-    <div className="bg-gray-900 border border-gray-700 rounded-lg p-4 mb-6">
+    <div className="bg-surface-1 border border-border-color rounded-lg p-4 mb-6">
       <div className="flex gap-4 items-center">
         {current.coverUrl && (
           <div className="w-16 h-20 relative flex-shrink-0 rounded overflow-hidden">
@@ -88,13 +88,13 @@ export default function RecommendationCard() {
           </div>
         )}
         <div className="flex-1">
-          <p className="text-xs text-gray-500 mb-1">Next up</p>
-          <p className="text-lg font-medium text-gray-100">{current.name}</p>
-          <p className="text-sm text-gray-400 mt-1">{current.reason}</p>
+          <p className="text-xs text-text-secondary mb-1">Next up</p>
+          <p className="text-lg font-medium text-foreground">{current.name}</p>
+          <p className="text-sm text-text-secondary mt-1">{current.reason}</p>
         </div>
       </div>
       <button
-        className="text-xs text-gray-500 mt-3 underline disabled:opacity-50"
+        className="text-xs text-text-secondary mt-3 underline disabled:opacity-50"
         onClick={handleShowAnother}
         disabled={refreshing}
       >

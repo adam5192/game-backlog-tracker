@@ -55,7 +55,7 @@ export default async function DashboardPage() {
       <h1 className="text-2xl font-medium mb-6">Your Dashboard</h1>
 
       {myGames.length === 0 ? (
-        <p className="text-gray-500">
+        <p className="text-text-secondary">
           No games yet -- you have not added anything to your backlog.
         </p>
       ) : (
