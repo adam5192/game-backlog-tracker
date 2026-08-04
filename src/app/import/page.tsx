@@ -208,58 +208,66 @@ export default function ImportPage() {
             Uncheck anything that matched incorrectly or that you don&apos;t
             want to import.
           </p>
-
-          <ul className="space-y-2 mb-6 max-h-[60vh] overflow-y-auto">
-            {candidates.map((c) => (
-              <li
-                key={c.steamAppId}
-                className="flex items-center gap-3 border-b border-border-color pb-3"
-              >
-                <input
-                  type="checkbox"
-                  checked={selected.has(c.steamAppId)}
-                  onChange={() => toggleSelected(c.steamAppId)}
-                  className="accent-accent"
-                />
-                <div className="flex-1">
-                  <p className="text-sm text-foreground">
-                    {c.steamName}
-                    {c.igdbMatch && c.igdbMatch.name !== c.steamName && (
-                      <span className="text-text-secondary">
-                        {" "}
-                        → matched: {c.igdbMatch.name}
-                      </span>
-                    )}
-                  </p>
-                  {!c.igdbMatch && (
-                    <p className="text-xs text-danger">
-                      No IGDB match found — will be skipped
+          {candidates.filter((c) => c.igdbMatch).length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-text-secondary text-sm">
+                None of your Steam games could be matched. This can happen with
+                very new or obscure titles.
+              </p>
+            </div>
+          ) : (
+            <ul className="space-y-2 mb-6 max-h-[60vh] overflow-y-auto">
+              {candidates.map((c) => (
+                <li
+                  key={c.steamAppId}
+                  className="flex items-center gap-3 border-b border-border-color pb-3"
+                >
+                  <input
+                    type="checkbox"
+                    checked={selected.has(c.steamAppId)}
+                    onChange={() => toggleSelected(c.steamAppId)}
+                    className="accent-accent"
+                  />
+                  <div className="flex-1">
+                    <p className="text-sm text-foreground">
+                      {c.steamName}
+                      {c.igdbMatch && c.igdbMatch.name !== c.steamName && (
+                        <span className="text-text-secondary">
+                          {" "}
+                          → matched: {c.igdbMatch.name}
+                        </span>
+                      )}
                     </p>
-                  )}
-                </div>
-
-                {selected.has(c.steamAppId) && (
-                  <div className="flex gap-1 flex-shrink-0">
-                    {(
-                      ["backlog", "playing", "completed", "dropped"] as const
-                    ).map((s) => (
-                      <button
-                        key={s}
-                        onClick={() => updateStatus(c.steamAppId, s)}
-                        className={`text-xs px-3 py-1 rounded-full capitalize transition-colors ${
-                          c.status === s
-                            ? "bg-accent text-accent-foreground font-medium"
-                            : "text-text-secondary hover:text-foreground hover:bg-surface-2 border border-border-color"
-                        }`}
-                      >
-                        {s}
-                      </button>
-                    ))}
+                    {!c.igdbMatch && (
+                      <p className="text-xs text-danger">
+                        No IGDB match found — will be skipped
+                      </p>
+                    )}
                   </div>
-                )}
-              </li>
-            ))}
-          </ul>
+
+                  {selected.has(c.steamAppId) && (
+                    <div className="flex gap-1 flex-shrink-0">
+                      {(
+                        ["backlog", "playing", "completed", "dropped"] as const
+                      ).map((s) => (
+                        <button
+                          key={s}
+                          onClick={() => updateStatus(c.steamAppId, s)}
+                          className={`text-xs px-3 py-1 rounded-full capitalize transition-colors ${
+                            c.status === s
+                              ? "bg-accent text-accent-foreground font-medium"
+                              : "text-text-secondary hover:text-foreground hover:bg-surface-2 border border-border-color"
+                          }`}
+                        >
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
 
           <button
             className="w-full text-sm px-4 py-2.5 rounded-full bg-accent text-accent-foreground disabled:opacity-50"

@@ -4,7 +4,7 @@ import { db } from "@/db";
 import { userGames, games } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import GameList from "@/components/GameList";
-
+import Link from "next/link";
 export default async function DashboardPage() {
   const supabase = await createClient();
 
@@ -54,11 +54,27 @@ export default async function DashboardPage() {
       <h1 className="text-2xl font-medium mb-6">Your Dashboard</h1>
 
       {myGames.length === 0 ? (
-        <p className="text-text-secondary">
-          No games yet -- you have not added anything to your backlog.
-        </p>
+        <div className="text-center py-16">
+          <p className="text-text-secondary mb-4">
+            No games yet... Search for something to add, or import your Steam
+            library.
+          </p>
+          <div className="flex gap-2 justify-center">
+            <Link
+              href="/search"
+              className="text-sm px-4 py-2 rounded-full bg-accent text-accent-foreground"
+            >
+              Search games
+            </Link>
+            <Link
+              href="/import"
+              className="text-sm px-4 py-2 rounded-full border border-border-color text-foreground hover:bg-surface-1 transition-colors"
+            >
+              Import from Steam
+            </Link>
+          </div>
+        </div>
       ) : (
-        // client component will handle fetched reshaped data and modal interactivity
         <GameList games={myGames} />
       )}
     </div>

@@ -68,7 +68,14 @@ export default function RecommendationCard() {
   }
 
   if (recommendations.length === 0) {
-    return null;
+    return (
+      <div className="bg-surface-2 border border-border-color rounded-2xl p-4 mb-6">
+        <p className="text-sm text-text-secondary">
+          Rate a few completed games and add something to your backlog to unlock
+          personalized recommendations.
+        </p>
+      </div>
+    );
   }
 
   const current = recommendations[index];

@@ -16,12 +16,14 @@ export default function SearchPage() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<GameResult[]>([]);
   const [loading, setLoading] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
 
   async function handleSearch() {
     setLoading(true);
     const res = await fetch(`/api/games/search?q=${encodeURIComponent(query)}`);
     const data = await res.json();
     setResults(data.results);
+    setHasSearched(true);
     setLoading(false);
   }
 
@@ -72,6 +74,12 @@ export default function SearchPage() {
             </li>
           ))}
         </ul>
+      ) : results.length === 0 && hasSearched ? (
+        <div className="text-center py-12">
+          <p className="text-text-secondary text-sm">
+            No games found for &ldquo;{query}&rdquo;. Try a different search.
+          </p>
+        </div>
       ) : (
         <ul className="space-y-3">
           {results.map((game) => (
