@@ -115,7 +115,7 @@ export default function Home() {
 
       <div className="relative z-10 text-center pb-4 lg:pb-6">
         <p className="text-xs lg:text-sm text-text-secondary">
-          Built by [Adam Mokdad] ·{" "}
+          Built by Adam Mokdad ·{" "}
           <a
             href="https://github.com/adam5192/game-backlog-tracker"
             className="text-text-secondary underline"

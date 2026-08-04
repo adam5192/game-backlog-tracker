@@ -4,7 +4,6 @@ import { db } from "@/db";
 import { userGames, games } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import GameList from "@/components/GameList";
-import RecommendationCard from "@/components/RecommendationCard";
 
 export default async function DashboardPage() {
   const supabase = await createClient();

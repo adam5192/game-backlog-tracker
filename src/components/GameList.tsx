@@ -110,7 +110,7 @@ export default function GameList({ games }: Props) {
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value as SortOption)}
         >
-          <option value="recent">Sort: Recently added</option>
+          <option value="recent">Recently added</option>
           <option value="name">Name (A-Z)</option>
           <option value="rating">Your rating</option>
           <option value="critic">Critic score</option>
@@ -171,7 +171,9 @@ export default function GameList({ games }: Props) {
       <RecommendationCard />
 
       {filteredGames.length === 0 ? (
-        <p className="text-text-secondary text-sm">No games match your filters.</p>
+        <p className="text-text-secondary text-sm">
+          No games match your filters.
+        </p>
       ) : (
         <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-7 xl:grid-cols-8 gap-3">
           {filteredGames.map((game) => (
