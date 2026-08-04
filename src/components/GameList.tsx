@@ -124,10 +124,10 @@ export default function GameList({ games }: Props) {
         <div className="flex gap-2 flex-wrap mb-3">
           <button
             onClick={() => setSelectedGenre(null)}
-            className={`text-xs px-3 py-1 rounded-full ${
+            className={`text-xs px-3 py-1 rounded-full transition-colors ${
               selectedGenre === null
                 ? "bg-accent text-accent-foreground"
-                : "border border-border-color text-text-secondary"
+                : "border border-border-color text-text-secondary hover:text-foreground hover:bg-surface-1"
             }`}
           >
             All
@@ -139,10 +139,10 @@ export default function GameList({ games }: Props) {
                 setSelectedGenre(genre === selectedGenre ? null : genre)
               }
               // clicking the already-selected genre toggles it back off
-              className={`text-xs px-3 py-1 rounded-full ${
+              className={`text-xs px-3 py-1 rounded-full transition-colors ${
                 selectedGenre === genre
                   ? "bg-accent text-accent-foreground"
-                  : "border border-border-color text-text-secondary"
+                  : "border border-border-color text-text-secondary hover:text-foreground hover:bg-surface-1"
               }`}
             >
               {genre}
@@ -157,7 +157,7 @@ export default function GameList({ games }: Props) {
           <button
             key={s}
             onClick={() => setStatusFilter(s)}
-            className={`capitalize text-sm px-4 py-1.5 rounded-full transistion-colors ${
+            className={`capitalize text-sm px-4 py-1.5 rounded-full transistion-colors hover:bg-surface-1 hover:text-foreground ${
               statusFilter === s
                 ? "bg-accent text-accent-foreground"
                 : "border border-border-color text-foreground"

@@ -176,7 +176,7 @@ export default function GameDetailModal({ game, onClose }: Props) {
 
           <div className="flex gap-2">
             <button
-              className="text-sm px-4 py-2 rounded-full flex-1 bg-accent text-accent-foreground disabled:opacity-50 active:scale-95 transition-transform"
+              className="text-sm px-4 py-2 rounded-full flex-1 bg-accent text-accent-foreground hover:opacity-90 transition-opacity disabled:opacity-50 active:scale-95"
               onClick={handleSave}
               disabled={saving}
             >

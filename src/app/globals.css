@@ -5,6 +5,11 @@
 @import "tailwindcss";
 @plugin "tailwindcss-animate";
 
+button:not(:disabled),
+[role="button"] {
+  cursor: pointer;
+}
+
 :root {
   --background: #f6f7ee;
   --foreground: #1a2419;

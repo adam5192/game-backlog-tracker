@@ -64,7 +64,9 @@ export default function AuthModal({ open, onClose }: Props) {
           onChange={(e) => setEmail(e.target.value)}
         />
 
-        <label className="text-sm text-text-secondary block mb-1">Password</label>
+        <label className="text-sm text-text-secondary block mb-1">
+          Password
+        </label>
         <input
           type="password"
           className="bg-background text-foreground px-4 py-2 rounded-lg w-full border border-border-color focus:border-accent outline-none transition-colors mb-4"
@@ -73,7 +75,7 @@ export default function AuthModal({ open, onClose }: Props) {
         />
 
         <button
-          className="w-full text-sm px-4 py-2 rounded-full bg-accent text-accent-foreground disabled:opacity-50 mb-3"
+          className="w-full text-sm px-4 py-2 rounded-full bg-accent text-accent-foreground disabled:opacity-50 mb-3 hover:opacity-90 transition-opacity active:scale-95"
           onClick={handleSubmit}
           disabled={loading}
         >
@@ -85,7 +87,7 @@ export default function AuthModal({ open, onClose }: Props) {
             ? "Don't have an account? "
             : "Already have an account? "}
           <button
-            className="text-foreground underline"
+            className="text-foreground underline hover:opacity-90 transition-opacity disabled:opacity-50 active:scale-95"
             onClick={() => setMode(mode === "login" ? "signup" : "login")}
           >
             {mode === "login" ? "Sign up" : "Log in"}

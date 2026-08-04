@@ -81,7 +81,7 @@ export default function Home() {
           library.
         </p>
         <button
-          className="text-sm lg:text-base px-6 lg:px-8 py-2.5 lg:py-3 rounded-full bg-accent text-accent-foreground"
+          className="text-sm lg:text-base px-6 lg:px-8 py-2.5 lg:py-3 rounded-full bg-accent text-accent-foreground hover:opacity-90 transition-opacity disabled:opacity-50 active:scale-95"
           onClick={() => setAuthOpen(true)}
         >
           Get started
