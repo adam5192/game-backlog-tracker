@@ -19,12 +19,24 @@ export default function SearchPage() {
   const [hasSearched, setHasSearched] = useState(false);
 
   async function handleSearch() {
+    if (!query.trim()) {
+      toast.error("Enter a game name to search.");
+      return;
+    }
+
     setLoading(true);
     const res = await fetch(`/api/games/search?q=${encodeURIComponent(query)}`);
     const data = await res.json();
-    setResults(data.results);
     setHasSearched(true);
     setLoading(false);
+
+    if (!res.ok) {
+      toast.error(data.error ?? "Something went wrong searching.");
+      setResults([]); // ensure results is always an array, never undefined
+      return;
+    }
+
+    setResults(data.results);
   }
 
   async function handleAdd(game: GameResult) {
