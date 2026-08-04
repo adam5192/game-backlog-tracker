@@ -2,6 +2,9 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+@import "tailwindcss";
+@plugin "tailwindcss-animate";
+
 :root {
   --background: #f6f7ee;
   --foreground: #1a2419;

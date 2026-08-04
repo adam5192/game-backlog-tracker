@@ -1,6 +1,7 @@
 import { createClient } from "@/utils/supabase/server";
 import Link from "next/link";
 import ThemeToggle from "./ThemeToggle";
+import NavLinks from "./NavLinks";
 
 export default async function NavBar() {
   const supabase = await createClient();
@@ -22,15 +23,7 @@ export default async function NavBar() {
     <div className="flex items-center justify-between border-b border-border-color px-8  py-4">
       <div className="flex items-center gap-7">
         <span className="font-medium text-foreground">Ludodex</span>
-        {links.map((link) => (
-          <Link
-            key={link.href}
-            href={link.href}
-            className="text-sm text-text-secondary hover:text-foreground transition-colors"
-          >
-            {link.label}
-          </Link>
-        ))}
+        <NavLinks />
       </div>
       <div className="flex items-center gap-2">
         <ThemeToggle />

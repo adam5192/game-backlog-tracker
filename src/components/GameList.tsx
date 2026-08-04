@@ -179,7 +179,7 @@ export default function GameList({ games }: Props) {
           {filteredGames.map((game) => (
             <button
               key={game.userGameId}
-              className="text-left border border-border-color rounded-lg overflow-hidden"
+              className="text-left border border-border-color rounded-lg overflow-hidden transition-all duration-200 hover:border-accent hover:-translate-y-1 hover:shadow-lg"
               onClick={() => setSelectedGame(game)}
             >
               <div className="aspect-3/4 bg-surface-2 relative">

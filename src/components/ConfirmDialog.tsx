@@ -25,7 +25,7 @@ export default function ConfirmDialog({
       onClick={onCancel}
     >
       <div
-        className="bg-surface-1 border border-border-color rounded-2xl max-w-sm w-full p-6"
+        className="bg-surface-1 border border-border-color rounded-2xl max-w-sm w-full p-6 animate-in fade-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         <h3 className="text-lg font-medium text-foreground mb-2">{title}</h3>
