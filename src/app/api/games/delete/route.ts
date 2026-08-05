@@ -16,7 +16,14 @@ export async function POST(request: NextRequest) {
 
   const { userGameId } = await request.json();
 
-  await db.delete(userGames).where(eq(userGames.id, userGameId));
-
-  return NextResponse.json({ success: true });
+  try {
+    await db.delete(userGames).where(eq(userGames.id, userGameId));
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error("Failed to delete game:", err);
+    return NextResponse.json(
+      { error: "Something went wrong removing this game" },
+      { status: 500 },
+    );
+  }
 }

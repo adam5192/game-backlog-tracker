@@ -45,13 +45,16 @@ export async function getRecommendations(
     )
     .join("\n");
 
-  const message = await anthropic.messages.create({
-    model: "claude-sonnet-5",
-    max_tokens: 600,
-    messages: [
-      {
-        role: "user",
-        content: `You are helping someone decide what game to play next from their backlog, based on their play history.
+  let message;
+
+  try {
+    message = await anthropic.messages.create({
+      model: "claude-sonnet-5",
+      max_tokens: 600,
+      messages: [
+        {
+          role: "user",
+          content: `You are helping someone decide what game to play next from their backlog, based on their play history.
 
         Games they've completed and rated:
         ${completedSummary}
@@ -61,9 +64,13 @@ export async function getRecommendations(
 
         Pick ${Math.min(count, backlog.length)} DIFFERENT games from the backlog that best fit their taste, ranked best-first. Write each reason addressing the person directly as "you"/"your" (not "they"/"their"). Respond with ONLY valid JSON, no other text, in this exact shape:
         [{"userGameId": "<id from backlog list>", "reason": "<1-2 sentences, addressed to the person as 'you'>"}, ...]`,
-      },
-    ],
-  });
+        },
+      ],
+    });
+  } catch (err) {
+    console.error("Anthropic API call failed:", err);
+    return [];
+  }
 
   const textBlock = message.content.find((block) => block.type === "text");
   if (!textBlock || textBlock.type !== "text") return [];

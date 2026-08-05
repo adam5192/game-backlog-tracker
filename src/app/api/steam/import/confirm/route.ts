@@ -36,66 +36,77 @@ export async function POST(request: NextRequest) {
     candidates: ConfirmedCandidate[];
   };
 
+  let importedCount = 0;
+  let failedCount = 0;
+
   // pattern matching stays within rate limits for big imports
   for (const candidate of candidates) {
-    const igdbId = candidate.igdbMatch.igdbId;
+    try {
+      const igdbId = candidate.igdbMatch.igdbId;
 
-    const existing = await db
-      .select()
-      .from(games)
-      .where(eq(games.igdbId, igdbId.toString()));
+      const existing = await db
+        .select()
+        .from(games)
+        .where(eq(games.igdbId, igdbId.toString()));
 
-    let gameRecord = existing[0];
+      let gameRecord = existing[0];
 
-    if (!gameRecord) {
-      let hltbData: {
-        hltbMain: number | null;
-        hltbMainExtra: number | null;
-        hltbCompletionist: number | null;
-      } = { hltbMain: null, hltbMainExtra: null, hltbCompletionist: null };
+      if (!gameRecord) {
+        let hltbData: {
+          hltbMain: number | null;
+          hltbMainExtra: number | null;
+          hltbCompletionist: number | null;
+        } = { hltbMain: null, hltbMainExtra: null, hltbCompletionist: null };
 
-      try {
-        const result = await getTimeToBeatById(igdbId);
-        if (result) hltbData = result;
-      } catch {}
+        try {
+          const result = await getTimeToBeatById(igdbId);
+          if (result) hltbData = result;
+        } catch {}
 
-      const inserted = await db
-        .insert(games)
-        .values({
-          igdbId: igdbId.toString(),
-          name: candidate.igdbMatch.name,
-          coverUrl: candidate.igdbMatch.coverUrl,
-          artworkUrl: candidate.igdbMatch.artworkUrl,
-          description: candidate.igdbMatch.description,
-          releaseDate: candidate.igdbMatch.releaseDate,
-          criticScore: candidate.igdbMatch.criticScore?.toString() ?? null,
-          genres: candidate.igdbMatch.genres ?? [],
-          hltbMain: hltbData.hltbMain?.toString() ?? null,
-          hltbMainExtra: hltbData.hltbMainExtra?.toString() ?? null,
-          hltbCompletionist: hltbData.hltbCompletionist?.toString() ?? null,
-        })
-        .returning();
-      gameRecord = inserted[0];
+        const inserted = await db
+          .insert(games)
+          .values({
+            igdbId: igdbId.toString(),
+            name: candidate.igdbMatch.name,
+            coverUrl: candidate.igdbMatch.coverUrl,
+            artworkUrl: candidate.igdbMatch.artworkUrl,
+            description: candidate.igdbMatch.description,
+            releaseDate: candidate.igdbMatch.releaseDate,
+            criticScore: candidate.igdbMatch.criticScore?.toString() ?? null,
+            genres: candidate.igdbMatch.genres ?? [],
+            hltbMain: hltbData.hltbMain?.toString() ?? null,
+            hltbMainExtra: hltbData.hltbMainExtra?.toString() ?? null,
+            hltbCompletionist: hltbData.hltbCompletionist?.toString() ?? null,
+          })
+          .returning();
+        gameRecord = inserted[0];
+      }
+
+      const status = candidate.status;
+
+      // skip inserting if the game was already in the user's list
+      const existingUserGame = await db
+        .select()
+        .from(userGames)
+        .where(eq(userGames.gameId, gameRecord.id));
+
+      const alreadyHasIt = existingUserGame.some((ug) => ug.userId === user.id);
+      if (alreadyHasIt) continue;
+
+      await db.insert(userGames).values({
+        userId: user.id,
+        gameId: gameRecord.id,
+        status,
+        source: "steam",
+      });
+
+      importedCount++;
+    } catch (err) {
+      // one game failing should not stop the rest
+      console.error(`Failed to import ${candidate.steamName}:`, err);
+      failedCount++;
     }
-
-    const status = candidate.status;
-
-    // skip inserting if the game was already in the user's list
-    const existingUserGame = await db
-      .select()
-      .from(userGames)
-      .where(eq(userGames.gameId, gameRecord.id));
-
-    const alreadyHasIt = existingUserGame.some((ug) => ug.userId === user.id);
-    if (alreadyHasIt) continue;
-
-    await db.insert(userGames).values({
-      userId: user.id,
-      gameId: gameRecord.id,
-      status,
-      source: "steam",
-    });
   }
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({ success: true, importedCount, failedCount });
 }

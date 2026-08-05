@@ -132,7 +132,15 @@ export default function ImportPage() {
       return;
     }
 
-    toast.success(`Imported ${toImport.length} games`);
+    const data = await res.json();
+    if (data.failedCount > 0) {
+      toast.warning(
+        `Imported ${data.importedCount} games, ${data.failedCount} failed`,
+      );
+    } else {
+      toast.success(`Imported ${data.importedCount} games`);
+    }
+
     router.push("/dashboard");
   }
 
