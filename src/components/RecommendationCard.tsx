@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { toast } from "sonner";
+import { ChevronLeft, ChevronRight, RefreshCw } from "lucide-react";
 
 type Recommendation = {
   userGameId: string;
@@ -11,11 +12,15 @@ type Recommendation = {
   reason: string;
 };
 
+const REFRESH_COOLDOWN_MS = 24 * 60 * 60 * 1000;
+
 export default function RecommendationCard() {
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [index, setIndex] = useState(0);
+  const [generatedAt, setGeneratedAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [now, setNow] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -26,6 +31,7 @@ export default function RecommendationCard() {
 
       if (!cancelled) {
         setRecommendations(data.recommendations ?? []);
+        setGeneratedAt(data.generatedAt ?? null);
         setIndex(0);
         setLoading(false);
       }
@@ -38,24 +44,49 @@ export default function RecommendationCard() {
     };
   }, []);
 
-  async function handleShowAnother() {
-    if (index < recommendations.length - 1) {
-      setIndex(index + 1);
-    } else {
-      setRefreshing(true);
-      const res = await fetch("/api/recommendations?refresh=true");
+  useEffect(() => {
+    const timeout = setTimeout(() => setNow(Date.now()), 0);
+    const interval = setInterval(() => setNow(Date.now()), 60 * 1000);
+    return () => {
+      clearTimeout(timeout);
+      clearInterval(interval);
+    };
+  }, []);
 
-      if (res.status === 429) {
-        toast.error("Please wait a moment before trying again");
-        setRefreshing(false);
-        return;
-      }
+  // how much time remains until a new refresh is allowed (used to disable the button or display try again later)
+  const msSinceGenerated =
+    generatedAt && now ? now - new Date(generatedAt).getTime() : 0;
 
-      const data = await res.json();
-      setRecommendations(data.recommendations ?? []);
-      setIndex(0);
+  const canRefresh = msSinceGenerated >= REFRESH_COOLDOWN_MS;
+  const hoursRemaining = Math.ceil(
+    (REFRESH_COOLDOWN_MS - msSinceGenerated) / (60 * 60 * 1000),
+  );
+
+  function goPrev() {
+    setIndex((i) => Math.max(0, i - 1));
+  }
+
+  function goNext() {
+    setIndex((i) => Math.min(recommendations.length - 1, i + 1));
+  }
+
+  async function handleRefresh() {
+    if (!canRefresh) return;
+
+    setRefreshing(true);
+    const res = await fetch("/api/recommendations?refresh=true");
+
+    if (res.status === 429) {
+      toast.error("Please wait a moment before trying again");
       setRefreshing(false);
+      return;
     }
+
+    const data = await res.json();
+    setRecommendations(data.recommendations ?? []);
+    setGeneratedAt(data.generatedAt ?? null);
+    setIndex(0);
+    setRefreshing(false);
   }
 
   if (loading) {
@@ -81,7 +112,17 @@ export default function RecommendationCard() {
 
   return (
     <div className="bg-surface-1 border border-border-color rounded-lg p-4 mb-6">
-      <div className="flex gap-4 items-center">
+      <div className="flex gap-3 items-center">
+        {/* left arrow : disabled and dimmed at the start of the list */}
+        <button
+          onClick={goPrev}
+          disabled={index === 0}
+          aria-label="Previous recommendation"
+          className="text-text-secondary hover:text-foreground disabled:opacity-30 disabled:hover:text-text-secondary transition-colors"
+        >
+          <ChevronLeft size={20} />
+        </button>
+
         {current.coverUrl && (
           <div className="w-16 h-20 relative flex-shrink-0 rounded overflow-hidden">
             <Image
@@ -98,13 +139,29 @@ export default function RecommendationCard() {
           <p className="text-lg font-medium text-foreground">{current.name}</p>
           <p className="text-sm text-text-secondary mt-1">{current.reason}</p>
         </div>
+
+        {/* right arrow : disabled and dimmed at the start of the list */}
+        <button
+          onClick={goNext}
+          disabled={index === recommendations.length - 1}
+          aria-label="Next recommendation"
+          className="text-text-secondary hover:text-foreground disabled:opacity-30 disabled:hover:text-text-secondary transition-colors"
+        >
+          <ChevronRight size={20} />
+        </button>
       </div>
+
       <button
-        className="text-xs text-text-secondary mt-3 underline disabled:opacity-50"
-        onClick={handleShowAnother}
-        disabled={refreshing}
+        className="flex items-center gap-1.5 text-xs text-text-secondary hover:text-foreground disabled:opacity-40 disabled:hover:text-text-secondary transition-colors mt-3"
+        onClick={handleRefresh}
+        disabled={!canRefresh || refreshing}
       >
-        {refreshing ? "Finding something else..." : "Show me something else"}
+        <RefreshCw size={12} className={refreshing ? "animate-spin" : ""} />
+        {refreshing
+          ? "Refreshing..."
+          : canRefresh
+            ? "Get new recommendations"
+            : `New picks available in ${hoursRemaining}h`}
       </button>
     </div>
   );

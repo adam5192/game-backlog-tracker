@@ -108,5 +108,8 @@ export async function GET(request: NextRequest) {
     })
     .filter((r) => r !== null);
 
-  return NextResponse.json({ recommendations: enriched });
+  return NextResponse.json({
+    recommendations: enriched,
+    generatedAt: cached?.generatedAt ?? new Date().toISOString(),
+  });
 }

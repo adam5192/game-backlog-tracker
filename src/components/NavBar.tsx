@@ -1,5 +1,4 @@
 import { createClient } from "@/utils/supabase/server";
-import Link from "next/link";
 import ThemeToggle from "./ThemeToggle";
 import NavLinks from "./NavLinks";
 
@@ -11,13 +10,6 @@ export default async function NavBar() {
 
   // logged out visiters dont see the nav
   if (!user) return null;
-
-  const links = [
-    { href: "/dashboard", label: "Dashboard" },
-    { href: "/search", label: "Search" },
-    { href: "/import", label: "Import" },
-    { href: "/stats", label: "Stats" }, // not built yet, but wiring the nav now
-  ];
 
   return (
     <div className="flex items-center justify-between border-b border-border-color px-8  py-4">
