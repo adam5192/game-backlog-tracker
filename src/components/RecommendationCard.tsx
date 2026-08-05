@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import { toast } from "sonner";
 
 type Recommendation = {
   userGameId: string;
@@ -15,15 +16,6 @@ export default function RecommendationCard() {
   const [index, setIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-
-  async function fetchRecommendations(forceRefresh = false) {
-    const res = await fetch(
-      `/api/recommendations${forceRefresh ? "?refresh=true" : ""}`,
-    );
-    const data = await res.json();
-    setRecommendations(data.recommendations ?? []);
-    setIndex(0); // reset to the first one whenever we get a new set
-  }
 
   useEffect(() => {
     let cancelled = false;
@@ -52,6 +44,13 @@ export default function RecommendationCard() {
     } else {
       setRefreshing(true);
       const res = await fetch("/api/recommendations?refresh=true");
+
+      if (res.status === 429) {
+        toast.error("Please wait a moment before trying again");
+        setRefreshing(false);
+        return;
+      }
+
       const data = await res.json();
       setRecommendations(data.recommendations ?? []);
       setIndex(0);

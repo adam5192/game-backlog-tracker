@@ -7,6 +7,10 @@ import { getRecommendations } from "@/lib/recommendations";
 
 const CACHE_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
 
+// rate-limiter that tracks last request time per user
+const lastRequestTime = new Map<string, number>();
+const MIN_INTERVAL_MS = 5000; // max one request every 5 seconds
+
 export async function GET(request: NextRequest) {
   const supabase = await createClient();
   const {
@@ -16,6 +20,18 @@ export async function GET(request: NextRequest) {
   if (!user) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
+
+  const now = Date.now();
+  const lastRequest = lastRequestTime.get(user.id);
+
+  if (lastRequest && now - lastRequest < MIN_INTERVAL_MS) {
+    return NextResponse.json(
+      { error: "Please wait a moment before requesting again." },
+      { status: 429 }, // too many requests
+    );
+  }
+
+  lastRequestTime.set(user.id, now);
 
   // ?refresh=true bypasses the cache entirely — used when the user has
   // cycled through every cached recommendation and wants fresh ones
