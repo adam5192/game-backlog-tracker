@@ -47,47 +47,35 @@ export async function getRecommendations(
 
   let message;
 
-  try {
-    message = await anthropic.messages.create({
-      model: "claude-sonnet-5",
-      max_tokens: 600,
-      messages: [
-        {
-          role: "user",
-          content: `You are helping someone decide what game to play next from their backlog, based on their play history.
+  // try up to 2 times in case calude response failts to parse
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      const message = await anthropic.messages.create({
+        model: "claude-sonnet-5",
+        max_tokens: 600,
+        messages: [{ role: "user", content: `...same prompt as before...` }],
+      });
 
-        Games they've completed and rated:
-        ${completedSummary}
+      const textBlock = message.content.find((block) => block.type === "text");
+      if (!textBlock || textBlock.type !== "text") continue; // try again
 
-        Their backlog to choose from (format: [id] name: description):
-        ${backlogSummary}
+      const cleaned = textBlock.text.replace(/```json|```/g, "").trim();
+      const parsed = JSON.parse(cleaned);
+      if (!Array.isArray(parsed)) continue; // try again
 
-        Pick ${Math.min(count, backlog.length)} DIFFERENT games from the backlog that best fit their taste, ranked best-first. Write each reason addressing the person directly as "you"/"your" (not "they"/"their"). Respond with ONLY valid JSON, no other text, in this exact shape:
-        [{"userGameId": "<id from backlog list>", "reason": "<1-2 sentences, addressed to the person as 'you'>"}, ...]`,
-        },
-      ],
-    });
-  } catch (err) {
-    console.error("Anthropic API call failed:", err);
-    return [];
+      const validIds = new Set(backlog.map((g) => g.id));
+      const results = parsed.filter(
+        (r): r is Recommendation =>
+          typeof r.userGameId === "string" && validIds.has(r.userGameId),
+      );
+
+      if (results.length > 0) return results;
+    } catch (err) {
+      console.error(`Recommendation attempt ${attempt} failed:`, err);
+      // either retry or give up after fail 2
+    }
   }
 
-  const textBlock = message.content.find((block) => block.type === "text");
-  if (!textBlock || textBlock.type !== "text") return [];
-
-  try {
-    const cleaned = textBlock.text.replace(/```json|```/g, "").trim();
-    const parsed = JSON.parse(cleaned);
-
-    if (!Array.isArray(parsed)) return [];
-
-    const validIds = new Set(backlog.map((g) => g.id));
-    // filter out any hallucinated ids
-    return parsed.filter(
-      (r): r is Recommendation =>
-        typeof r.userGameId === "string" && validIds.has(r.userGameId),
-    );
-  } catch {
-    return [];
-  }
+  // both attempts failed, return empty array
+  return [];
 }
