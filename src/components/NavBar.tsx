@@ -22,7 +22,7 @@ export default async function NavBar() {
   return (
     <div className="flex items-center justify-between border-b border-border-color px-8  py-4">
       <div className="flex items-center gap-7">
-        <span className="font-medium text-foreground">Ludodex</span>
+        <span className="font-medium text-foreground">Playloggd</span>
         <NavLinks />
       </div>
       <div className="flex items-center gap-2">

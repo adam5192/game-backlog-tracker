@@ -21,6 +21,27 @@ export async function POST(request: NextRequest) {
 
   const { profileInput } = await request.json();
 
+  // sanity check before calling steam API
+  if (
+    !profileInput ||
+    typeof profileInput !== "string" ||
+    !profileInput.trim()
+  ) {
+    return new Response(
+      JSON.stringify({ error: "Enter your Steam profile URL or vanity name" }),
+      { status: 400 },
+    );
+  }
+
+  if (profileInput.length > 200) {
+    return new Response(
+      JSON.stringify({
+        error: "That doesn't look like a valid Steam profile URL",
+      }),
+      { status: 400 },
+    );
+  }
+
   const steamId = await resolveSteamId(profileInput);
   if (!steamId) {
     return NextResponse.json(

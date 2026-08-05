@@ -10,8 +10,15 @@ import {
 export async function GET(request: NextRequest) {
   const query = request.nextUrl.searchParams.get("q");
 
-  if (!query) {
+  if (!query || !query.trim()) {
     return NextResponse.json({ error: "Missing query" }, { status: 400 });
+  }
+
+  if (query.length > 150) {
+    return NextResponse.json(
+      { error: "Search query is too long" },
+      { status: 400 },
+    );
   }
 
   const games = await searchIgdbGames(query);

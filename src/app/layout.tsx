@@ -11,7 +11,7 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "Ludodex | Game Backlog Tracker.",
+  title: "Playloggd | Game Backlog Tracker.",
   description:
     "Track your game backlog, import from Steam, and get AI-powered recommendations for what to play next.",
 };

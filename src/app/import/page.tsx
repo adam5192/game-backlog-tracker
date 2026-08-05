@@ -27,6 +27,11 @@ export default function ImportPage() {
   const router = useRouter();
 
   async function handleFetch() {
+    if (!profileInput.trim()) {
+      setError("Enter your Steam profile URL or vanity name");
+      return;
+    }
+
     setLoading(true);
     setError("");
     setProgress(null);
