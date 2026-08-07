@@ -28,3 +28,59 @@ export async function GET() {
     );
   }
 }
+
+export async function POST(request: NextRequest) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  }
+
+  const body = await request.json();
+  const { name, description } = body;
+
+  // validation: name required, non-empty, reasonable length
+  if (!name || typeof name !== "string" || !name.trim()) {
+    return NextResponse.json(
+      { error: "List name is required" },
+      { status: 400 },
+    );
+  }
+  if (name.length > 100) {
+    return NextResponse.json(
+      { error: "List name is too long (max 100 characters)" },
+      { status: 400 },
+    );
+  }
+  if (
+    description != null &&
+    (typeof description !== "string" || description.length > 500)
+  ) {
+    return NextResponse.json(
+      { error: "Description is too long (max 500 characters)" },
+      { status: 400 },
+    );
+  }
+
+  try {
+    const inserted = await db
+      .insert(lists)
+      .values({
+        userId: user.id,
+        name: name.trim(),
+        description: description?.trim() || null,
+      })
+      .returning();
+
+    return NextResponse.json({ list: inserted[0] });
+  } catch (err) {
+    console.error("Failed to create list:", err);
+    return NextResponse.json(
+      { error: "Something went wrong creating your list" },
+      { status: 500 },
+    );
+  }
+}

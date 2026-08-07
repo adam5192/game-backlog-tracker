@@ -43,6 +43,13 @@
       "when": 1785530521881,
       "tag": "0005_equal_dormammu",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1786118104914,
+      "tag": "0006_nebulous_mister_sinister",
+      "breakpoints": true
     }
   ]
 }

@@ -6,6 +6,8 @@ import {
   date,
   timestamp,
   unique,
+  integer,
+  boolean,
 } from "drizzle-orm/pg-core";
 
 export const games = pgTable("games", {
@@ -53,3 +55,32 @@ export const recommendations = pgTable("recommendations", {
   data: text("data").notNull(), // JSON string: an array of recommendations
   generatedAt: timestamp("generated_at").defaultNow(),
 });
+
+export const lists = pgTable("lists", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull(),
+  name: text("name").notNull(),
+  description: text("description"),
+  isPublic: boolean("is_public").notNull().default(false), // might use for later
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const listGames = pgTable(
+  "list_games",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    listId: uuid("list_id")
+      .notNull()
+      .references(() => lists.id, { onDelete: "cascade" }), // delete a list = also deleting list_games
+    gameId: uuid("game_id")
+      .notNull()
+      .references(() => games.id),
+    position: integer("position").notNull(), // for drag to reorder
+    addedAt: timestamp("added_at").defaultNow(),
+  },
+  (table) => ({
+    // game can be in multiple lists but not twice in the same list
+    uniqueListGame: unique().on(table.listId, table.gameId),
+  }),
+);
