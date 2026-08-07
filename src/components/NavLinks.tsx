@@ -8,6 +8,7 @@ const links = [
   { href: "/search", label: "Search" },
   { href: "/import", label: "Import" },
   { href: "/stats", label: "Stats" },
+  { href: "/lists", label: "Lists" },
 ];
 
 export default function NavLinks() {

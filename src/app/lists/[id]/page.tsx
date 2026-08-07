@@ -5,6 +5,20 @@ import { useParams } from "next/navigation";
 import Image from "next/image";
 import { toast } from "sonner";
 import { X, Plus, Search } from "lucide-react";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  rectSortingStrategy,
+} from "@dnd-kit/sortable";
+import SortableGameCard from "@/components/SortableGameCard";
 
 type ListGame = {
   listGameId: string;
@@ -132,6 +146,45 @@ export default function ListDetailPage() {
     toast.success("Removed from list");
   }
 
+  // PointerSensor handles both mouse and touch drag interactions
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+  );
+
+  async function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+
+    // if dropped outside any valid target, or dropped back on itself, do nothing
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = games.findIndex((g) => g.listGameId === active.id);
+    const newIndex = games.findIndex((g) => g.listGameId === over.id);
+
+    // arrayMove: returns a new array with the updated index
+    const reordered = arrayMove(games, oldIndex, newIndex);
+
+    // update local state immediately
+    setGames(reordered);
+
+    // new order stored to database
+    const order = reordered.map((g, index) => ({
+      listGameId: g.listGameId,
+      position: index,
+    }));
+
+    const res = await fetch(`/api/lists/${listId}/reorder`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ order }),
+    });
+
+    if (!res.ok) {
+      toast.error("Couldn't save the new order");
+      // revert to old state if it is rejected
+      setGames(games);
+    }
+  }
+
   if (loading) {
     return (
       <div className="p-8 max-w-4xl mx-auto text-text-secondary text-sm">
@@ -227,34 +280,28 @@ export default function ListDetailPage() {
           No games in this list yet.
         </p>
       ) : (
-        <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-7 gap-3">
-          {games.map((game) => (
-            <div key={game.listGameId} className="relative group">
-              <div className="aspect-[3/4] bg-surface-1 rounded-lg overflow-hidden relative">
-                {" "}
-                {game.coverUrl && (
-                  <Image
-                    src={game.coverUrl}
-                    alt={game.name}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 768px) 33vw, 16vw"
-                  />
-                )}
-              </div>
-              <button
-                onClick={() => handleRemove(game.gameId)}
-                aria-label={`Remove ${game.name}`}
-                className="absolute top-1 right-1 w-6 h-6 rounded-full bg-surface-2/90 text-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <X size={14} />
-              </button>
-              <p className="text-xs text-foreground mt-1.5 truncate">
-                {game.name}
-              </p>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={games.map((g) => g.listGameId)}
+            strategy={rectSortingStrategy}
+          >
+            <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-7 gap-3">
+              {games.map((game) => (
+                <SortableGameCard
+                  key={game.listGameId}
+                  id={game.listGameId}
+                  name={game.name}
+                  coverUrl={game.coverUrl}
+                  onRemove={() => handleRemove(game.gameId)}
+                />
+              ))}
             </div>
-          ))}
-        </div>
+          </SortableContext>
+        </DndContext>
       )}
     </div>
   );
