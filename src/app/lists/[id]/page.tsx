@@ -190,6 +190,39 @@ export default function ListDetailPage() {
     }
   }
 
+  function startEditing() {
+    if (!list) return;
+    setEditName(list.name);
+    setEditDescription(list.description ?? "");
+    setEditing(true);
+  }
+
+  async function handleSaveEdit() {
+    if (!editName.trim()) {
+      toast.error("List name can't be empty");
+      return;
+    }
+
+    setSavingEdit(true);
+    const res = await fetch(`/api/lists/${listId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: editName, description: editDescription }),
+    });
+    setSavingEdit(false);
+
+    if (!res.ok) {
+      const data = await res.json();
+      toast.error(data.error ?? "Couldn't save changes");
+      return;
+    }
+
+    const data = await res.json();
+    setList(data.list);
+    setEditing(false);
+    toast.success("List updated");
+  }
+
   if (loading) {
     return (
       <div className="p-8 max-w-4xl mx-auto text-text-secondary text-sm">
@@ -209,17 +242,58 @@ export default function ListDetailPage() {
   return (
     <div className="p-8 max-w-4xl mx-auto">
       <div className="flex items-center justify-between mb-1">
-        <h1 className="text-2xl font-medium text-foreground">{list.name}</h1>
-        <button
-          onClick={toggleAddPanel}
-          className="flex items-center gap-1.5 text-sm px-4 py-2 rounded-full bg-accent text-accent-foreground hover:opacity-90 transition-opacity"
-        >
-          <Plus size={16} />
-          {showAddPanel ? "Done adding" : "Add games"}
-        </button>
+        {editing ? (
+          <input
+            className="bg-surface-1 text-foreground text-2xl font-medium px-3 py-1 rounded-lg border border-border-color focus:border-accent outline-none transition-colors flex-1 mr-3"
+            value={editName}
+            onChange={(e) => setEditName(e.target.value)}
+            autoFocus
+          />
+        ) : (
+          <h1 className="text-2xl font-medium text-foreground">{list.name}</h1>
+        )}
+
+        <div className="flex gap-2">
+          {editing ? (
+            <button
+              onClick={handleSaveEdit}
+              disabled={savingEdit}
+              className="flex items-center gap-1.5 text-sm px-4 py-2 rounded-full bg-accent text-accent-foreground hover:opacity-90 transition-opacity disabled:opacity-50"
+            >
+              <Check size={16} />
+              {savingEdit ? "Saving..." : "Save"}
+            </button>
+          ) : (
+            <button
+              onClick={startEditing}
+              aria-label="Edit list"
+              className="w-9 h-9 rounded-full flex items-center justify-center text-text-secondary hover:text-foreground hover:bg-surface-1 transition-colors"
+            >
+              <Pencil size={16} />
+            </button>
+          )}
+          <button
+            onClick={toggleAddPanel}
+            className="flex items-center gap-1.5 text-sm px-4 py-2 rounded-full bg-accent text-accent-foreground hover:opacity-90 transition-opacity"
+          >
+            <Plus size={16} />
+            {showAddPanel ? "Done adding" : "Add games"}
+          </button>
+        </div>
       </div>
-      {list.description && (
-        <p className="text-text-secondary text-sm mb-6">{list.description}</p>
+
+      {editing ? (
+        <textarea
+          className="bg-surface-1 text-foreground placeholder-text-secondary px-3 py-2 rounded-lg w-full border border-border-color focus:border-accent outline-none transition-colors mb-6 text-sm resize-none"
+          placeholder="Description (optional)"
+          rows={2}
+          value={editDescription}
+          onChange={(e) => setEditDescription(e.target.value)}
+        />
+      ) : (
+        list.description && (
+          <p className="text-text-secondary text-sm mb-6">{list.description}</p>
+        )
       )}
 
       {showAddPanel && (
@@ -338,7 +412,7 @@ function PickableCard({
           alt={game.name}
           fill
           className="object-cover"
-          sizes="80px"
+          sizes="(max-width: 640px) 22vw, 15vw"
         />
       )}
       {alreadyAdded && (
