@@ -26,10 +26,13 @@ export default function GenreChart({ data }: Props) {
         <YAxis
           type="category"
           dataKey="genre"
-          width={90}
-          tick={{ fill: "var(--text-secondary)", fontSize: 12 }}
+          width={100}
+          tick={{ fill: "var(--text-secondary)", fontSize: 11 }}
           axisLine={false}
           tickLine={false}
+          tickFormatter={(value: string) =>
+            value.length > 11 ? `${value.slice(0, 11)}…` : value
+          }
         />
         <Tooltip
           contentStyle={{

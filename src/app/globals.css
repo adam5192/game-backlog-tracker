@@ -10,6 +10,11 @@ button:not(:disabled),
   cursor: pointer;
 }
 
+/* removes white outline when a chart is clicked */
+.recharts-wrapper *:focus {
+  outline: none;
+}
+
 :root {
   --background: #f6f7ee;
   --foreground: #1a2419;

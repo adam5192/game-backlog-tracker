@@ -160,6 +160,7 @@ export default function ImportPage() {
           <input
             className="bg-surface-1 text-foreground placeholder-text-secondary px-4 py-2 rounded-lg flex-1 border border-border-color focus:border-accent outline-none transition-colors"
             placeholder="Your Steam profile URL or vanity name"
+            onKeyDown={(e) => e.key === "Enter" && handleFetch()}
             value={profileInput}
             onChange={(e) => setProfileInput(e.target.value)}
           />
