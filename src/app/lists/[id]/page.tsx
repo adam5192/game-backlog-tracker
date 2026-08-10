@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
 import { toast } from "sonner";
-import { X, Plus, Search } from "lucide-react";
+import { X, Plus, Search, Pencil, Check } from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -62,6 +62,11 @@ export default function ListDetailPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<PickableGame[]>([]);
   const [searching, setSearching] = useState(false);
+
+  const [editing, setEditing] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [savingEdit, setSavingEdit] = useState(false);
 
   // tracks which ids are alr in this list, so we can show its already added
   const inListIds = new Set(games.map((g) => g.igdbId));

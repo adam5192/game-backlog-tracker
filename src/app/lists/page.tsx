@@ -4,11 +4,14 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
+import Image from "next/image";
 
 type ListSummary = {
   id: string;
   name: string;
   description: string | null;
+  previewCovers: string[];
+  gameCount: number;
 };
 
 export default function ListsPage() {
@@ -16,6 +19,7 @@ export default function ListsPage() {
   const [loading, setLoading] = useState(true);
   const [newListName, setNewListName] = useState("");
   const [creating, setCreating] = useState(false);
+  const [newListDescription, setNewListDescription] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -45,7 +49,10 @@ export default function ListsPage() {
     const res = await fetch("/api/lists", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: newListName }),
+      body: JSON.stringify({
+        name: newListName,
+        description: newListDescription,
+      }),
     });
     setCreating(false);
 
@@ -56,8 +63,12 @@ export default function ListsPage() {
     }
 
     const data = await res.json();
-    setLists((prev) => [...prev, data.list]);
+    setLists((prev) => [
+      ...prev,
+      { ...data.list, previewCovers: [], gameCount: 0 },
+    ]);
     setNewListName("");
+    setNewListDescription("");
     toast.success("List created");
   }
 
@@ -65,22 +76,31 @@ export default function ListsPage() {
     <div className="p-8 max-w-4xl mx-auto">
       <h1 className="text-2xl font-medium mb-6 text-foreground">Your lists</h1>
 
-      <div className="flex gap-2 mb-8">
+      <div className="flex flex-col gap-2 mb-8">
+        <div className="flex gap-2">
+          <input
+            className="bg-surface-1 text-foreground placeholder-text-secondary px-4 py-2 rounded-lg flex-1 border border-border-color focus:border-accent outline-none transition-colors"
+            placeholder="New list name..."
+            value={newListName}
+            onChange={(e) => setNewListName(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleCreate()}
+          />
+          <button
+            className="flex items-center gap-1.5 text-sm px-4 py-2 rounded-full bg-accent text-accent-foreground hover:opacity-90 transition-opacity disabled:opacity-50"
+            onClick={handleCreate}
+            disabled={creating}
+          >
+            <Plus size={16} />
+            {creating ? "Creating..." : "Create list"}
+          </button>
+        </div>
         <input
-          className="bg-surface-1 text-foreground placeholder-text-secondary px-4 py-2 rounded-lg flex-1 border border-border-color focus:border-accent outline-none transition-colors"
-          placeholder="New list name..."
-          value={newListName}
-          onChange={(e) => setNewListName(e.target.value)}
+          className="bg-surface-1 text-foreground placeholder-text-secondary px-4 py-2 rounded-lg border border-border-color focus:border-accent outline-none transition-colors text-sm"
+          placeholder="Description (optional)"
+          value={newListDescription}
+          onChange={(e) => setNewListDescription(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleCreate()}
         />
-        <button
-          className="flex items-center gap-1.5 text-sm px-4 py-2 rounded-full bg-accent text-accent-foreground hover:opacity-90 transition-opacity disabled:opacity-50"
-          onClick={handleCreate}
-          disabled={creating}
-        >
-          <Plus size={16} />
-          {creating ? "Creating..." : "Create list"}
-        </button>
       </div>
       {loading ? (
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -104,12 +124,41 @@ export default function ListsPage() {
               href={`/lists/${list.id}`}
               className="bg-surface-1 border border-border-color rounded-2xl p-5 hover:border-accent transition-colors"
             >
-              <h3 className="text-foreground font-medium mb-1">{list.name}</h3>
-              {list.description && (
-                <p className="text-sm text-text-secondary line-clamp-2">
-                  {list.description}
-                </p>
+              {/* preview strip (only rendered if the list actually has games */}
+              {list.previewCovers.length > 0 && (
+                <div className="grid grid-cols-4 gap-2 p-3 pb-0">
+                  {/* always render 4 slots, empty ones will have a placeholder*/}
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="aspect-3/4 relative bg-surface-2 rounded-lg overflow-hidden"
+                    >
+                      {list.previewCovers[i] && (
+                        <Image
+                          src={list.previewCovers[i]}
+                          alt=""
+                          fill
+                          className="object-cover"
+                          sizes="100px"
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
               )}
+              <div className="p-5">
+                <h3 className="text-foreground font-medium mb-1">
+                  {list.name}
+                </h3>
+                {list.description && (
+                  <p className="text-sm text-text-secondary line-clamp-2 mb-1">
+                    {list.description}
+                  </p>
+                )}
+                <p className="text-xs text-text-secondary">
+                  {list.gameCount} {list.gameCount === 1 ? "game" : "games"}
+                </p>
+              </div>
             </Link>
           ))}
         </div>

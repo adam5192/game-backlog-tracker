@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 import { db } from "@/db";
-import { lists } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { lists, listGames, games } from "@/db/schema";
+import { eq, asc, inArray } from "drizzle-orm";
 
 export async function GET() {
   const supabase = await createClient();
@@ -19,7 +19,34 @@ export async function GET() {
       .select()
       .from(lists)
       .where(eq(lists.userId, user.id));
-    return NextResponse.json({ lists: userLists });
+
+    // one query with all lists games, joined with games for cover art so we can preview a few
+    const listIds = userLists.map((l) => l.id);
+    const allListGames = await db
+      .select()
+      .from(listGames)
+      .innerJoin(games, eq(listGames.gameId, games.id))
+      .where(inArray(listGames.listId, listIds))
+      .orderBy(asc(listGames.position));
+
+    // group the result set by listId, keeping the first 4 for preview
+    const coversByList: Record<string, string[]> = {};
+    for (const row of allListGames) {
+      const listId = row.list_games.listId;
+      if (!coversByList[listId]) coversByList[listId] = [];
+      if (coversByList[listId].length < 4 && row.games.coverUrl) {
+        coversByList[listId].push(row.games.coverUrl);
+      }
+    }
+
+    const listWithPreviews = userLists.map((list) => ({
+      ...list,
+      previewCovers: coversByList[list.id] ?? [],
+      gameCount: allListGames.filter((row) => row.list_games.listId === list.id)
+        .length,
+    }));
+
+    return NextResponse.json({ lists: listWithPreviews });
   } catch (err) {
     console.error("Failed to fetch lists:", err);
     return NextResponse.json(
