@@ -8,8 +8,9 @@ import ConfirmDialog from "./ConfirmDialog";
 import StarRating from "./StarRating";
 
 type GameDetail = {
-  userGameId: string;
+  userGameId: string | null;
   gameId: string;
+  igdbId: number; // needed for the add-to-backlog call
   name: string;
   coverUrl: string | null;
   artworkUrl: string | null;
@@ -18,7 +19,7 @@ type GameDetail = {
   hltbMain: number | null;
   hltbMainExtra: number | null;
   hltbCompletionist: number | null;
-  status: string;
+  status: string | null;
   rating: number | null;
   notes: string | null;
 };
@@ -35,6 +36,34 @@ export default function GameDetailModal({ game, onClose }: Props) {
   const [saving, setSaving] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const router = useRouter();
+
+  async function handleAddToBacklog() {
+    setSaving(true);
+    const res = await fetch("/api/games/add", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        igdbId: game.igdbId,
+        name: game.name,
+        coverUrl: game.coverUrl,
+        artworkUrl: game.artworkUrl,
+        description: game.description,
+        criticScore: game.criticScore,
+        status: "backlog",
+      }),
+    });
+    setSaving(false);
+
+    if (!res.ok) {
+      const data = await res.json();
+      toast.error(data.error ?? "Couldn't add this game");
+      return;
+    }
+
+    toast.success(`Added ${game.name} to your backlog`);
+    router.refresh();
+    onClose();
+  }
 
   async function handleSave() {
     setSaving(true);
