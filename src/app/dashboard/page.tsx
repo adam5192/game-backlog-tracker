@@ -51,9 +51,9 @@ export default async function DashboardPage() {
   }));
 
   return (
-    <div className="p-8 max-w-[1600px] mx-auto">
+    <div className="px-4 py-8 sm:px-8 max-w-4xl mx-auto">
+      {" "}
       <h1 className="text-2xl font-medium mb-6">Your Dashboard</h1>
-
       {myGames.length === 0 ? (
         <div className="text-center py-16">
           <p className="text-text-secondary mb-4">

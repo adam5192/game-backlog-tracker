@@ -150,11 +150,11 @@ export default function ImportPage() {
   }
 
   return (
-    <div className="p-8 max-w-2xl mx-auto">
+    <div className="px-4 py-8 sm:px-8 max-w-4xl mx-auto">
+      {" "}
       <h1 className="text-2xl font-medium mb-6 text-foreground">
         Import from Steam
       </h1>
-
       {candidates.length === 0 && (
         <div className="flex gap-2 mb-4">
           <input
@@ -173,7 +173,6 @@ export default function ImportPage() {
           </button>
         </div>
       )}
-
       {loading && (
         <div className="mb-6">
           <div className="flex justify-between text-sm text-text-secondary mb-2">
@@ -196,9 +195,7 @@ export default function ImportPage() {
           </div>
         </div>
       )}
-
       {error && <p className="text-danger text-sm mb-4">{error}</p>}
-
       {candidates.length > 0 && (
         <>
           <div className="flex items-center justify-between mb-4">
@@ -234,33 +231,36 @@ export default function ImportPage() {
               {candidates.map((c) => (
                 <li
                   key={c.steamAppId}
-                  className="flex items-center gap-3 border-b border-border-color pb-3"
+                  className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 border-b border-border-color pb-3"
                 >
-                  <input
-                    type="checkbox"
-                    checked={selected.has(c.steamAppId)}
-                    onChange={() => toggleSelected(c.steamAppId)}
-                    className="accent-accent"
-                  />
-                  <div className="flex-1">
-                    <p className="text-sm text-foreground">
-                      {c.steamName}
-                      {c.igdbMatch && c.igdbMatch.name !== c.steamName && (
-                        <span className="text-text-secondary">
-                          {" "}
-                          → matched: {c.igdbMatch.name}
-                        </span>
-                      )}
-                    </p>
-                    {!c.igdbMatch && (
-                      <p className="text-xs text-danger">
-                        No IGDB match found — will be skipped
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={selected.has(c.steamAppId)}
+                      onChange={() => toggleSelected(c.steamAppId)}
+                      className="accent-accent flex-shrink-0"
+                    />
+                    <div className="flex-1">
+                      <p className="text-sm text-foreground">
+                        {c.steamName}
+                        {c.igdbMatch && c.igdbMatch.name !== c.steamName && (
+                          <span className="text-text-secondary">
+                            {" "}
+                            → matched: {c.igdbMatch.name}
+                          </span>
+                        )}
                       </p>
-                    )}
+                      {!c.igdbMatch && (
+                        <p className="text-xs text-danger">
+                          No IGDB match found — will be skipped
+                        </p>
+                      )}
+                    </div>
                   </div>
 
                   {selected.has(c.steamAppId) && (
-                    <div className="flex gap-1 shrink-0">
+                    // flex-wrap lets the 4 pills drop to a second line if needed
+                    <div className="flex gap-1 flex-wrap pl-7 sm:pl-0">
                       {(
                         ["backlog", "playing", "completed", "dropped"] as const
                       ).map((s) => (

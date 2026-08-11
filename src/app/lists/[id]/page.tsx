@@ -4,7 +4,12 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
 import { toast } from "sonner";
-import { X, Plus, Search, Pencil, Check } from "lucide-react";
+import { Plus, Search, Pencil, Check } from "lucide-react";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Trash2 } from "lucide-react";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import {
   DndContext,
   closestCenter,
@@ -81,8 +86,26 @@ export default function ListDetailPage() {
 
   const [selectedGame, setSelectedGame] = useState<ListGame | null>(null);
 
+  const router = useRouter();
+  const [confirmingDeleteList, setConfirmingDeleteList] = useState(false);
+  const [deletingList, setDeletingList] = useState(false);
+
   // tracks which ids are alr in this list, so we can show its already added
   const inListIds = new Set(games.map((g) => g.igdbId));
+
+  async function handleDeleteList() {
+    setDeletingList(true);
+    const res = await fetch(`/api/lists/${listId}`, { method: "DELETE" });
+    setDeletingList(false);
+
+    if (!res.ok) {
+      toast.error("Couldn't delete this list");
+      return;
+    }
+
+    toast.success("List deleted");
+    router.push("/lists");
+  }
 
   async function loadList() {
     const res = await fetch(`/api/lists/${listId}`);
@@ -255,7 +278,14 @@ export default function ListDetailPage() {
   }
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
+    <div className="px-4 py-8 sm:px-8 max-w-4xl mx-auto">
+      <Link
+        href="/lists"
+        className="inline-flex items-center gap-1.5 text-sm text-text-secondary hover:text-foreground transition-colors mb-4"
+      >
+        <ArrowLeft size={16} />
+        Back to lists
+      </Link>
       <div className="flex items-center justify-between mb-1">
         {editing ? (
           <input
@@ -287,6 +317,18 @@ export default function ListDetailPage() {
               <Pencil size={16} />
             </button>
           )}
+
+          {/* only show the delete button when not mid-edit */}
+          {!editing && (
+            <button
+              onClick={() => setConfirmingDeleteList(true)}
+              aria-label="Delete list"
+              className="w-9 h-9 rounded-full flex items-center justify-center text-text-secondary hover:text-danger hover:bg-surface-1 transition-colors"
+            >
+              <Trash2 size={16} />
+            </button>
+          )}
+
           <button
             onClick={toggleAddPanel}
             className="flex items-center gap-1.5 text-sm px-4 py-2 rounded-full bg-accent text-accent-foreground hover:opacity-90 transition-opacity"
@@ -296,7 +338,6 @@ export default function ListDetailPage() {
           </button>
         </div>
       </div>
-
       {editing ? (
         <textarea
           className="bg-surface-1 text-foreground placeholder-text-secondary px-3 py-2 rounded-lg w-full border border-border-color focus:border-accent outline-none transition-colors mb-6 text-sm resize-none"
@@ -310,7 +351,6 @@ export default function ListDetailPage() {
           <p className="text-text-secondary text-sm mb-6">{list.description}</p>
         )
       )}
-
       {showAddPanel && (
         <div className="bg-surface-1 border border-border-color rounded-2xl p-5 mb-8">
           <h2 className="text-sm font-medium text-foreground mb-3">
@@ -368,7 +408,6 @@ export default function ListDetailPage() {
           )}
         </div>
       )}
-
       {games.length === 0 ? (
         <p className="text-text-secondary text-sm">
           No games in this list yet.
@@ -398,7 +437,15 @@ export default function ListDetailPage() {
           </SortableContext>
         </DndContext>
       )}
-
+      {/* delete confirmation */}
+      <ConfirmDialog
+        open={confirmingDeleteList}
+        title={`Delete "${list.name}"?`}
+        description="This will permanently delete the list and remove all games from it. This can't be undone."
+        confirmLabel={deletingList ? "Deleting..." : "Delete list"}
+        onConfirm={handleDeleteList}
+        onCancel={() => setConfirmingDeleteList(false)}
+      />
       {selectedGame && (
         <GameDetailModal
           game={{

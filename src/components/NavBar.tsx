@@ -1,6 +1,5 @@
 import { createClient } from "@/utils/supabase/server";
-import NavLinks from "./NavLinks";
-import UserMenu from "./UserMenu";
+import NavBarContent from "./NavBarContent";
 
 export default async function NavBar() {
   const supabase = await createClient();
@@ -10,13 +9,5 @@ export default async function NavBar() {
 
   if (!user) return null;
 
-  return (
-    <div className="flex items-center justify-between border-b border-border-color px-8 py-4">
-      <div className="flex items-center gap-7">
-        <span className="font-medium text-foreground">Ludodex</span>
-        <NavLinks />
-      </div>
-      <UserMenu email={user.email ?? ""} />
-    </div>
-  );
+  return <NavBarContent email={user.email ?? ""} />;
 }

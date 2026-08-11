@@ -73,9 +73,9 @@ export default function ListsPage() {
   }
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
+    <div className="px-4 py-8 sm:px-8 max-w-4xl mx-auto">
+      {" "}
       <h1 className="text-2xl font-medium mb-6 text-foreground">Your lists</h1>
-
       <div className="flex flex-col gap-2 mb-8">
         <div className="flex gap-2">
           <input
@@ -103,7 +103,7 @@ export default function ListsPage() {
         />
       </div>
       {loading ? (
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           {[...Array(3)].map((_, i) => (
             <div
               key={i}
@@ -117,7 +117,8 @@ export default function ListsPage() {
           started.
         </p>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          {" "}
           {lists.map((list) => (
             <Link
               key={list.id}

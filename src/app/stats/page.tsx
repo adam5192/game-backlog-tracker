@@ -59,9 +59,9 @@ export default async function StatsPage() {
   }));
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
+    <div className="px-4 py-8 sm:px-8 max-w-4xl mx-auto">
+      {" "}
       <h1 className="text-2xl font-medium mb-6 text-foreground">Your stats</h1>
-
       {totalGames === 0 ? (
         <p className="text-text-secondary">
           Add some games to your library to see your stats here.
@@ -69,7 +69,8 @@ export default async function StatsPage() {
       ) : (
         <>
           {/* stat cards */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+            {" "}
             <StatCard label="Total games" value={totalGames.toString()} />
             <StatCard
               label="Completed"

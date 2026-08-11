@@ -57,11 +57,11 @@ export default function SearchPage() {
   }
 
   return (
-    <div className="p-8 max-w-2xl mx-auto">
+    <div className="px-4 py-8 sm:px-8 max-w-4xl mx-auto">
+      {" "}
       <h1 className="text-2xl font-medium mb-6 text-foreground">
         Search Games
       </h1>
-
       <div className="flex gap-2 mb-6">
         <input
           className="bg-surface-1 text-foreground placeholder-text-secondary px-4 py-2 rounded-lg flex-1 border border-border-color focus:border-accent outline-none transition-colors"
@@ -78,7 +78,6 @@ export default function SearchPage() {
           {loading ? "Searching..." : "Search"}
         </button>
       </div>
-
       {loading ? (
         // skeleton rows so the layout doesnt jump once real data arrives
         <ul className="space-y-3">
