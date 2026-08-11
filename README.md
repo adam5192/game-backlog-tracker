@@ -33,7 +33,7 @@ A full stack app for tracking your game backlog, rating what you've completed, o
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/d74a5066-e849-4691-b3a8-a844b1862601" width="200" />
-  <img src="https://github.com/user-attachments/assets/7c53275e-a527-402f-9c1a-6acc696f4b2d" width="200" />
+  <img src="https://github.com/user-attachments/assets/97d0e59d-b6b2-4023-b641-cdc062175f91" width="200" />
   <img src="https://github.com/user-attachments/assets/046f370a-e35c-4c40-bc7a-6656ead51f9b" width="200" />
   <img src="https://github.com/user-attachments/assets/aad7b711-aaed-4579-a561-2b488aaba7b5" width="200" />
 </p>
