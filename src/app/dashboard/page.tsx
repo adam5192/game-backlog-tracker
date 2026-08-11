@@ -29,6 +29,7 @@ export default async function DashboardPage() {
   const myGames = rows.map((row) => ({
     userGameId: row.user_games.id,
     gameId: row.games.id,
+    igdbId: Number(row.games.igdbId),
     name: row.games.name,
     coverUrl: row.games.coverUrl,
     artworkUrl: row.games.artworkUrl,

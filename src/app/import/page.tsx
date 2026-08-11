@@ -260,7 +260,7 @@ export default function ImportPage() {
                   </div>
 
                   {selected.has(c.steamAppId) && (
-                    <div className="flex gap-1 flex-shrink-0">
+                    <div className="flex gap-1 shrink-0">
                       {(
                         ["backlog", "playing", "completed", "dropped"] as const
                       ).map((s) => (

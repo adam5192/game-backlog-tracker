@@ -9,6 +9,7 @@ import RecommendationCard from "@/components/RecommendationCard";
 type GameDetail = {
   userGameId: string;
   gameId: string;
+  igdbId: number;
   name: string;
   coverUrl: string | null;
   artworkUrl: string | null;
