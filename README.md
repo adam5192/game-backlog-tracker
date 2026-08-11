@@ -15,6 +15,15 @@ A full stack app for tracking your game backlog, rating what you've completed, o
 - A stats page showing your library at a glance: genre breakdown, completion status, and how your ratings compare to critic averages
 - Light and dark mode, with a custom color theme
 
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/d74a5066-e849-4691-b3a8-a844b1862601" width="200" />
+  <img src="https://github.com/user-attachments/assets/97d0e59d-b6b2-4023-b641-cdc062175f91" width="200" />
+  <img src="https://github.com/user-attachments/assets/046f370a-e35c-4c40-bc7a-6656ead51f9b" width="200" />
+  <img src="https://github.com/user-attachments/assets/aad7b711-aaed-4579-a561-2b488aaba7b5" width="200" />
+</p>
+
+
 ## Tech stack
 
 - Next.js 15 (App Router) with TypeScript
@@ -28,17 +37,6 @@ A full stack app for tracking your game backlog, rating what you've completed, o
 - dnd kit for drag and drop list reordering
 - Recharts for the stats page
 - Hosted on Vercel
-
-
-
-<p align="center">
-  <img src="https://github.com/user-attachments/assets/d74a5066-e849-4691-b3a8-a844b1862601" width="200" />
-  <img src="https://github.com/user-attachments/assets/97d0e59d-b6b2-4023-b641-cdc062175f91" width="200" />
-  <img src="https://github.com/user-attachments/assets/046f370a-e35c-4c40-bc7a-6656ead51f9b" width="200" />
-  <img src="https://github.com/user-attachments/assets/aad7b711-aaed-4579-a561-2b488aaba7b5" width="200" />
-</p>
-
-
 
 ## Some of the harder problems I ran into
 
