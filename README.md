@@ -2,7 +2,7 @@
 
 A full stack app for tracking your game backlog, rating what you've completed, organizing custom lists, and getting AI powered recommendations for what to play next. I built this to solve a real problem I had: an ever growing backlog of games I owned but never actually got around to playing.
 
-[**Live demo:**](https://game-backlog-tracker-seven.vercel.app/)
+[**Live demo**](https://playloggd.adammokdad.com/)
 
 ## What it does
 
@@ -28,6 +28,15 @@ A full stack app for tracking your game backlog, rating what you've completed, o
 - dnd kit for drag and drop list reordering
 - Recharts for the stats page
 - Hosted on Vercel
+
+
+
+<img width="642" height="1389" alt="IMG_15781" src="https://github.com/user-attachments/assets/d74a5066-e849-4691-b3a8-a844b1862601" />
+<img width="642" height="1389" alt="IMG_15820" src="https://github.com/user-attachments/assets/7c53275e-a527-402f-9c1a-6acc696f4b2d" />
+<img width="642" height="1389" alt="IMG_1578" src="https://github.com/user-attachments/assets/1d313593-c6d8-4f07-9173-7f6028b1be24" />
+<img width="642" height="1389" alt="IMG_1580" src="https://github.com/user-attachments/assets/aad7b711-aaed-4579-a561-2b488aaba7b5" />
+
+
 
 ## Some of the harder problems I ran into
 
