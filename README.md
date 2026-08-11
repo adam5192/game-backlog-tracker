@@ -31,10 +31,12 @@ A full stack app for tracking your game backlog, rating what you've completed, o
 
 
 
-<img width="642" height="1389" alt="IMG_15781" src="https://github.com/user-attachments/assets/d74a5066-e849-4691-b3a8-a844b1862601" />
-<img width="642" height="1389" alt="IMG_15820" src="https://github.com/user-attachments/assets/7c53275e-a527-402f-9c1a-6acc696f4b2d" />
-<img width="642" height="1389" alt="IMG_1578" src="https://github.com/user-attachments/assets/1d313593-c6d8-4f07-9173-7f6028b1be24" />
-<img width="642" height="1389" alt="IMG_1580" src="https://github.com/user-attachments/assets/aad7b711-aaed-4579-a561-2b488aaba7b5" />
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/d74a5066-e849-4691-b3a8-a844b1862601" width="200" />
+  <img src="https://github.com/user-attachments/assets/7c53275e-a527-402f-9c1a-6acc696f4b2d" width="200" />
+  <img src="https://github.com/user-attachments/assets/046f370a-e35c-4c40-bc7a-6656ead51f9b" width="200" />
+  <img src="https://github.com/user-attachments/assets/aad7b711-aaed-4579-a561-2b488aaba7b5" width="200" />
+</p>
 
 
 
