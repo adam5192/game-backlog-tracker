@@ -30,7 +30,7 @@ type Props = {
 };
 
 export default function GameDetailModal({ game, onClose }: Props) {
-  const [status, setStatus] = useState(game.status);
+  const [status, setStatus] = useState(game.status ?? "backlog");
   const [rating, setRating] = useState(game.rating ?? 0);
   const [notes, setNotes] = useState(game.notes ?? "");
   const [saving, setSaving] = useState(false);
@@ -172,53 +172,65 @@ export default function GameDetailModal({ game, onClose }: Props) {
             </div>
           </div>
 
-          <label className="text-sm text-text-secondary block mb-1.5">
-            Status
-          </label>
-          <select
-            className="bg-surface-1 text-foreground px-4 py-2 rounded-lg w-full border border-border-color focus:border-accent outline-none transition-colors mb-4"
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-          >
-            <option value="backlog">Backlog</option>
-            <option value="playing">Playing</option>
-            <option value="completed">Completed</option>
-            <option value="dropped">Dropped</option>
-          </select>
+          {game.userGameId ? (
+            <>
+              <label className="text-sm text-text-secondary block mb-1.5">
+                Status
+              </label>
+              <select
+                className="bg-surface-1 text-foreground px-4 py-2 rounded-lg w-full border border-border-color focus:border-accent outline-none transition-colors mb-4"
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+              >
+                <option value="backlog">Backlog</option>
+                <option value="playing">Playing</option>
+                <option value="completed">Completed</option>
+                <option value="dropped">Dropped</option>
+              </select>
 
-          <label className="text-sm text-text-secondary block mb-2">
-            Your rating
-          </label>
-          <div className="mb-4">
-            <StarRating value={rating} onChange={setRating} />
-          </div>
+              <label className="text-sm text-text-secondary block mb-2">
+                Your rating
+              </label>
+              <div className="mb-4">
+                <StarRating value={rating} onChange={setRating} />
+              </div>
 
-          <label className="text-sm text-text-secondary block mb-1.5">
-            Notes
-          </label>
-          <textarea
-            className="bg-surface-1 text-foreground px-4 py-2 rounded-lg w-full border border-border-color focus:border-accent outline-none transition-colors mb-5 resize-none"
-            rows={3}
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-          />
+              <label className="text-sm text-text-secondary block mb-1.5">
+                Notes
+              </label>
+              <textarea
+                className="bg-surface-1 text-foreground px-4 py-2 rounded-lg w-full border border-border-color focus:border-accent outline-none transition-colors mb-5 resize-none"
+                rows={3}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+              />
 
-          <div className="flex gap-2">
+              <div className="flex gap-2">
+                <button
+                  className="text-sm px-4 py-2 rounded-full flex-1 bg-accent text-accent-foreground hover:opacity-90 transition-opacity disabled:opacity-50 active:scale-95"
+                  onClick={handleSave}
+                  disabled={saving}
+                >
+                  {saving ? "Saving..." : "Save changes"}
+                </button>
+                <button
+                  className="text-sm px-4 py-2 rounded-full bg-danger/10 text-danger border border-danger hover:bg-danger/20 transition-colors disabled:opacity-50 active:scale-95"
+                  onClick={() => setConfirmingDelete(true)}
+                  disabled={saving}
+                >
+                  Remove
+                </button>
+              </div>
+            </>
+          ) : (
             <button
-              className="text-sm px-4 py-2 rounded-full flex-1 bg-accent text-accent-foreground hover:opacity-90 transition-opacity disabled:opacity-50 active:scale-95"
-              onClick={handleSave}
+              className="text-sm px-4 py-2 rounded-full w-full bg-accent text-accent-foreground hover:opacity-90 transition-opacity disabled:opacity-50 active:scale-95"
+              onClick={handleAddToBacklog}
               disabled={saving}
             >
-              {saving ? "Saving..." : "Save changes"}
+              {saving ? "Adding..." : "Add to backlog"}
             </button>
-            <button
-              className="text-sm px-4 py-2 rounded-full bg-danger/10 text-danger border border-danger hover:bg-danger/20 transition-colors disabled:opacity-50 active:scale-95"
-              onClick={() => setConfirmingDelete(true)}
-              disabled={saving}
-            >
-              Remove
-            </button>
-          </div>
+          )}
         </div>
       </div>
 

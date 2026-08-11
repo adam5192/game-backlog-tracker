@@ -10,6 +10,7 @@ type Props = {
   name: string;
   coverUrl: string | null;
   onRemove: () => void;
+  onClick: () => void;
 };
 
 export default function SortableGameCard({
@@ -17,6 +18,7 @@ export default function SortableGameCard({
   name,
   coverUrl,
   onRemove,
+  onClick,
 }: Props) {
   // useSortable allows for drag and drop with the sortable list
   const {
@@ -42,6 +44,7 @@ export default function SortableGameCard({
       // spreading attributes/listeners onto the whole card makes the entire card draggable
       {...attributes}
       {...listeners}
+      onClick={onClick}
       className="relative group cursor-grab active:cursor-grabbing"
     >
       <div className="aspect-3/4 bg-surface-1 rounded-lg overflow-hidden relative">

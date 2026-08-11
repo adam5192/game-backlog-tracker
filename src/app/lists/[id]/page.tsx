@@ -19,6 +19,7 @@ import {
   rectSortingStrategy,
 } from "@dnd-kit/sortable";
 import SortableGameCard from "@/components/SortableGameCard";
+import GameDetailModal from "@/components/GameDetailModal";
 
 type ListGame = {
   listGameId: string;
@@ -27,6 +28,16 @@ type ListGame = {
   name: string;
   coverUrl: string | null;
   position: number;
+  artworkUrl: string | null;
+  description: string | null;
+  criticScore: number | null;
+  hltbMain: number | null;
+  hltbMainExtra: number | null;
+  hltbCompletionist: number | null;
+  userGameId: string | null;
+  status: string | null;
+  rating: number | null;
+  notes: string | null;
 };
 
 type ListDetail = {
@@ -68,23 +79,27 @@ export default function ListDetailPage() {
   const [editDescription, setEditDescription] = useState("");
   const [savingEdit, setSavingEdit] = useState(false);
 
+  const [selectedGame, setSelectedGame] = useState<ListGame | null>(null);
+
   // tracks which ids are alr in this list, so we can show its already added
   const inListIds = new Set(games.map((g) => g.igdbId));
+
+  async function loadList() {
+    const res = await fetch(`/api/lists/${listId}`);
+    const data = await res.json();
+    setList(data.list ?? null);
+    setGames(data.games ?? []);
+  }
 
   useEffect(() => {
     let cancelled = false;
 
-    async function load() {
-      const res = await fetch(`/api/lists/${listId}`);
-      const data = await res.json();
-      if (!cancelled) {
-        setList(data.list ?? null);
-        setGames(data.games ?? []);
-        setLoading(false);
-      }
+    async function initialLoad() {
+      await loadList();
+      if (!cancelled) setLoading(false);
     }
 
-    load();
+    initialLoad();
     return () => {
       cancelled = true;
     };
@@ -376,11 +391,37 @@ export default function ListDetailPage() {
                   name={game.name}
                   coverUrl={game.coverUrl}
                   onRemove={() => handleRemove(game.gameId)}
+                  onClick={() => setSelectedGame(game)}
                 />
               ))}
             </div>
           </SortableContext>
         </DndContext>
+      )}
+
+      {selectedGame && (
+        <GameDetailModal
+          game={{
+            userGameId: selectedGame.userGameId,
+            gameId: selectedGame.gameId,
+            igdbId: selectedGame.igdbId,
+            name: selectedGame.name,
+            coverUrl: selectedGame.coverUrl,
+            artworkUrl: selectedGame.artworkUrl,
+            description: selectedGame.description,
+            criticScore: selectedGame.criticScore,
+            hltbMain: selectedGame.hltbMain,
+            hltbMainExtra: selectedGame.hltbMainExtra,
+            hltbCompletionist: selectedGame.hltbCompletionist,
+            status: selectedGame.status,
+            rating: selectedGame.rating,
+            notes: selectedGame.notes,
+          }}
+          onClose={() => {
+            setSelectedGame(null);
+            loadList(); // refetch so userGameId/status reflect what just changed
+          }}
+        />
       )}
     </div>
   );
