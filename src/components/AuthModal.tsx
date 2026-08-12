@@ -11,8 +11,15 @@ type Props = {
   onClose: () => void;
 };
 
+type Mode =
+  | "login"
+  | "signup"
+  | "check-email"
+  | "forgot-password"
+  | "reset-sent";
+
 export default function AuthModal({ open, onClose }: Props) {
-  const [mode, setMode] = useState<"login" | "signup" | "check-email">("login");
+  const [mode, setMode] = useState<Mode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -21,7 +28,15 @@ export default function AuthModal({ open, onClose }: Props) {
 
   if (!open) return null;
 
+  const passwordTooShort =
+    mode === "signup" && password.length > 0 && password.length < 6;
+
   async function handleSubmit() {
+    if (mode === "signup" && password.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+
     setLoading(true);
 
     if (mode === "signup") {
@@ -91,6 +106,26 @@ export default function AuthModal({ open, onClose }: Props) {
     onClose();
   }
 
+  async function handleForgotPassword() {
+    if (!email.trim()) {
+      toast.error("Enter your email first");
+      return;
+    }
+
+    setLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/reset-password`,
+    });
+    setLoading(false);
+
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+
+    setMode("reset-sent");
+  }
+
   return (
     <div
       className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
@@ -108,7 +143,7 @@ export default function AuthModal({ open, onClose }: Props) {
           ×
         </button>
 
-        {mode === "check-email" ? (
+        {mode === "check-email" && (
           <div className="text-center">
             <h3 className="text-lg font-medium text-foreground mb-2">
               Check your email
@@ -132,7 +167,65 @@ export default function AuthModal({ open, onClose }: Props) {
               Back to login
             </button>
           </div>
-        ) : (
+        )}
+
+        {mode === "reset-sent" && (
+          <div className="text-center">
+            <h3 className="text-lg font-medium text-foreground mb-2">
+              Check your email
+            </h3>
+            <p className="text-sm text-text-secondary mb-6">
+              We sent a password reset link to{" "}
+              <span className="text-foreground">{email}</span>. Click it to set
+              a new password.
+            </p>
+            <button
+              onClick={() => setMode("login")}
+              className="w-full text-sm px-4 py-2 rounded-full bg-accent text-accent-foreground hover:opacity-90 transition-opacity"
+            >
+              Back to login
+            </button>
+          </div>
+        )}
+
+        {mode === "forgot-password" && (
+          <div>
+            <h3 className="text-lg font-medium text-foreground mb-1">
+              Reset your password
+            </h3>
+            <p className="text-sm text-text-secondary mb-5">
+              Enter your email and we&apos;ll send you a reset link.
+            </p>
+
+            <label className="text-sm text-text-secondary block mb-1">
+              Email
+            </label>
+            <input
+              className="bg-surface-1 text-foreground placeholder-text-secondary px-4 py-2 rounded-lg w-full border border-border-color focus:border-accent outline-none transition-colors mb-4"
+              placeholder="name@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleForgotPassword()}
+            />
+
+            <button
+              className="w-full text-sm px-4 py-2 rounded-full bg-accent text-accent-foreground disabled:opacity-50 mb-3"
+              onClick={handleForgotPassword}
+              disabled={loading}
+            >
+              {loading ? "Sending..." : "Send reset link"}
+            </button>
+
+            <button
+              onClick={() => setMode("login")}
+              className="w-full text-sm text-text-secondary hover:text-foreground transition-colors"
+            >
+              Back to login
+            </button>
+          </div>
+        )}
+
+        {(mode === "login" || mode === "signup") && (
           <>
             <h3 className="text-lg font-medium text-foreground mb-1">
               {mode === "login" ? "Welcome back" : "Create an account"}
@@ -172,13 +265,28 @@ export default function AuthModal({ open, onClose }: Props) {
             </label>
             <input
               type="password"
-              className="bg-surface-1 text-foreground px-4 py-2 rounded-lg w-full border border-border-color focus:border-accent outline-none transition-colors mb-4"
+              className="bg-surface-1 text-foreground px-4 py-2 rounded-lg w-full border border-border-color focus:border-accent outline-none transition-colors"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
+            {/* live hint, only shown once they've started typing and it's still too short */}
+            {passwordTooShort && (
+              <p className="text-xs text-danger mt-1">
+                Must be at least 6 characters
+              </p>
+            )}
+
+            {mode === "login" && (
+              <button
+                onClick={() => setMode("forgot-password")}
+                className="text-xs text-text-secondary hover:text-foreground transition-colors mt-1.5 block"
+              >
+                Forgot password?
+              </button>
+            )}
 
             <button
-              className="w-full text-sm px-4 py-2 rounded-full bg-accent text-accent-foreground disabled:opacity-50 mb-3"
+              className="w-full text-sm px-4 py-2 rounded-full bg-accent text-accent-foreground disabled:opacity-50 mt-4 mb-3"
               onClick={handleSubmit}
               disabled={loading}
             >
