@@ -4,6 +4,7 @@ import { useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import GoogleIcon from "./GoogleIcon";
 
 type Props = {
   open: boolean;
@@ -22,10 +23,37 @@ export default function AuthModal({ open, onClose }: Props) {
 
   async function handleSubmit() {
     setLoading(true);
-    const { error } =
-      mode === "signup"
-        ? await supabase.auth.signUp({ email, password })
-        : await supabase.auth.signInWithPassword({ email, password });
+    if (mode === "signup") {
+      const { data, error } = await supabase.auth.signUp({ email, password });
+      setLoading(false);
+
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+
+      // signUp succeeds even when email confirmation is required, but  data.session will be null in that case since there's no active login yet, just a pending unconfirmed account
+      if (!data.session) {
+        toast.success(
+          "Check your email to confirm your account before logging in.",
+          {
+            duration: 6000,
+          },
+        );
+        setMode("login");
+        return;
+      }
+
+      onClose();
+      router.push("/dashboard");
+      router.refresh();
+      return;
+    }
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
     setLoading(false);
 
     if (error) {
@@ -36,6 +64,15 @@ export default function AuthModal({ open, onClose }: Props) {
     onClose();
     router.push("/dashboard");
     router.refresh(); // ensures navbar re-checks auth state
+  }
+
+  async function handleGoogleSignIn() {
+    await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
   }
 
   return (
@@ -73,6 +110,20 @@ export default function AuthModal({ open, onClose }: Props) {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
+
+        <button
+          onClick={handleGoogleSignIn}
+          className="w-full flex items-center justify-center gap-2 text-sm px-4 py-2 rounded-full border border-border-color text-foreground hover:bg-surface-1 transition-colors mb-4"
+        >
+          <GoogleIcon size={18} />
+          Continue with Google
+        </button>
+
+        <div className="flex items-center gap-3 mb-4">
+          <div className="flex-1 h-px bg-border-color" />
+          <span className="text-xs text-text-secondary">or</span>
+          <div className="flex-1 h-px bg-border-color" />
+        </div>
 
         <button
           className="w-full text-sm px-4 py-2 rounded-full bg-accent text-accent-foreground disabled:opacity-50 mb-3 hover:opacity-90 transition-opacity active:scale-95"

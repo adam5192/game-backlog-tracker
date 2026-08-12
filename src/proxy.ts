@@ -30,7 +30,13 @@ export async function proxy(request: NextRequest) {
   );
 
   // getUser() triggers supabase to check/refresh
-  await supabase.auth.getUser();
+  try {
+    await supabase.auth.getUser();
+  } catch (err) {
+    console.warn("Session refresh failed, treating as logged out:", err);
+  }
+
+  return supabaseResponse;
 
   return supabaseResponse;
 }
