@@ -23,6 +23,7 @@ export default function AuthModal({ open, onClose }: Props) {
 
   async function handleSubmit() {
     setLoading(true);
+
     if (mode === "signup") {
       const { data, error } = await supabase.auth.signUp({ email, password });
       setLoading(false);
@@ -32,7 +33,6 @@ export default function AuthModal({ open, onClose }: Props) {
         return;
       }
 
-      // signUp succeeds even when email confirmation is required, but  data.session will be null in that case since there's no active login yet, just a pending unconfirmed account
       if (!data.session) {
         setMode("check-email");
         return;
@@ -57,7 +57,7 @@ export default function AuthModal({ open, onClose }: Props) {
 
     onClose();
     router.push("/dashboard");
-    router.refresh(); // ensures navbar re-checks auth state
+    router.refresh();
   }
 
   async function handleGoogleSignIn() {
@@ -82,17 +82,26 @@ export default function AuthModal({ open, onClose }: Props) {
     toast.success("Confirmation email sent again");
   }
 
+  function handleClose() {
+    // reset back to a clean login view next time the modal opens,
+    // rather than reopening on whatever state it was last left in
+    setMode("login");
+    setEmail("");
+    setPassword("");
+    onClose();
+  }
+
   return (
     <div
       className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
-      onClick={onClose}
+      onClick={handleClose}
     >
       <div
         className="bg-surface-2 border border-border-color rounded-2xl max-w-sm w-full p-6 relative animate-in fade-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         <button
-          onClick={onClose}
+          onClick={handleClose}
           aria-label="Close"
           className="absolute top-4 right-4 text-text-secondary hover:text-foreground transition-colors"
         >
