@@ -4,8 +4,6 @@ import { db } from "@/db";
 import { games, userGames } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { getTimeToBeatById } from "@/lib/igdb";
-import { error } from "console";
-// import { getMetacriticScore } from "@/lib/rawg";
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();

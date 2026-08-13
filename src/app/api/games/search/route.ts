@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@/utils/supabase/server";
+import { searchRatelimit } from "@/lib/ratelimit";
 import {
   searchIgdbGames,
   getFullCoverUrl,
@@ -8,6 +10,23 @@ import {
 
 // handle GET requests to /api/games/serach
 export async function GET(request: NextRequest) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  }
+
+  const { success } = await searchRatelimit.limit(user.id);
+  if (!success) {
+    return NextResponse.json(
+      { error: "Too many searches, please slow down." },
+      { status: 429 },
+    );
+  }
+
   const query = request.nextUrl.searchParams.get("q");
 
   if (!query || !query.trim()) {

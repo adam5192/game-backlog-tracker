@@ -1,3 +1,5 @@
+//////////////////////////// CURRENTLY UNUSED (might use later)
+
 // shape of a single result from RAWG search endpoint, with only the fields needed
 type RawgSearchResult = {
   name: string;

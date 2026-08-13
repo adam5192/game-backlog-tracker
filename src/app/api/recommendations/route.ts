@@ -4,12 +4,16 @@ import { db } from "@/db";
 import { userGames, games, recommendations } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { getRecommendations } from "@/lib/recommendations";
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
+import { recommendationsRatelimit } from "@/lib/ratelimit";
+
+const redis = Redis.fromEnv();
+
+// allows 1 request per 5-second window enforced through shared storage that
+// every serverless instance can see, instead of in-memory state
 
 const CACHE_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
-
-// rate-limiter that tracks last request time per user
-const lastRequestTime = new Map<string, number>();
-const MIN_INTERVAL_MS = 5000; // max one request every 5 seconds
 
 export async function GET(request: NextRequest) {
   const supabase = await createClient();
@@ -21,19 +25,17 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const now = Date.now();
-  const lastRequest = lastRequestTime.get(user.id);
+  // each user gets their own independent 5-second window
+  const { success } = await recommendationsRatelimit.limit(user.id);
 
-  if (lastRequest && now - lastRequest < MIN_INTERVAL_MS) {
+  if (!success) {
     return NextResponse.json(
       { error: "Please wait a moment before requesting again." },
-      { status: 429 }, // too many requests
+      { status: 429 },
     );
   }
 
-  lastRequestTime.set(user.id, now);
-
-  // ?refresh=true bypasses the cache entirely — used when the user has
+  // ?refresh=true bypasses the cache entirely, used when the user has
   // cycled through every cached recommendation and wants fresh ones
   const forceRefresh = request.nextUrl.searchParams.get("refresh") === "true";
 

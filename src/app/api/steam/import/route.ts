@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
+import { importRatelimit } from "@/lib/ratelimit";
 import {
   resolveSteamId,
   getOwnedGames,
@@ -16,7 +17,17 @@ export async function POST(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    return new Response(JSON.stringify({ error: "Not authenticated" }), {
+      status: 401,
+    });
+  }
+
+  const { success } = await importRatelimit.limit(user.id);
+  if (!success) {
+    return new Response(
+      JSON.stringify({ error: "Please wait before importing again." }),
+      { status: 429 },
+    );
   }
 
   const { profileInput } = await request.json();
