@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import SteamImportGuide from "@/components/SteamImportGuide";
 
 type Candidate = {
   steamAppId: number;
@@ -156,22 +157,25 @@ export default function ImportPage() {
         Import from Steam
       </h1>
       {candidates.length === 0 && (
-        <div className="flex gap-2 mb-4">
-          <input
-            className="bg-surface-1 text-foreground placeholder-text-secondary px-4 py-2 rounded-lg flex-1 border border-border-color focus:border-accent outline-none transition-colors"
-            placeholder="Your Steam profile URL or vanity name"
-            onKeyDown={(e) => e.key === "Enter" && handleFetch()}
-            value={profileInput}
-            onChange={(e) => setProfileInput(e.target.value)}
-          />
-          <button
-            className="text-sm px-5 py-2 rounded-full bg-accent text-accent-foreground disabled:opacity-50"
-            onClick={handleFetch}
-            disabled={loading}
-          >
-            {loading ? "Fetching..." : "Fetch library"}
-          </button>
-        </div>
+        <>
+          <SteamImportGuide />
+          <div className="flex gap-2 mb-4">
+            <input
+              className="bg-surface-1 text-foreground placeholder-text-secondary px-4 py-2 rounded-lg flex-1 border border-border-color focus:border-accent outline-none transition-colors"
+              placeholder="Your Steam profile URL or vanity name"
+              onKeyDown={(e) => e.key === "Enter" && handleFetch()}
+              value={profileInput}
+              onChange={(e) => setProfileInput(e.target.value)}
+            />
+            <button
+              className="text-sm px-5 py-2 rounded-full bg-accent text-accent-foreground disabled:opacity-50"
+              onClick={handleFetch}
+              disabled={loading}
+            >
+              {loading ? "Fetching..." : "Fetch library"}
+            </button>
+          </div>
+        </>
       )}
       {loading && (
         <div className="mb-6">
@@ -238,7 +242,7 @@ export default function ImportPage() {
                       type="checkbox"
                       checked={selected.has(c.steamAppId)}
                       onChange={() => toggleSelected(c.steamAppId)}
-                      className="accent-accent flex-shrink-0"
+                      className="accent-accent shrink-0"
                     />
                     <div className="flex-1">
                       <p className="text-sm text-foreground">
