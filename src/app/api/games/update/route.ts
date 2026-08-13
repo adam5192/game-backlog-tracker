@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 import { db } from "@/db";
 import { userGames } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -36,10 +36,19 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    await db
+    // current user can only update a game if it belongs to them
+    const updated = await db
       .update(userGames)
       .set({ status, rating, notes, updatedAt: new Date() })
-      .where(eq(userGames.id, userGameId));
+      .where(and(eq(userGames.id, userGameId), eq(userGames.userId, user.id)))
+      .returning();
+
+    if (updated.length === 0) {
+      return NextResponse.json(
+        { error: "Game entry not found" },
+        { status: 404 },
+      );
+    }
 
     return NextResponse.json({ success: true });
   } catch (err) {

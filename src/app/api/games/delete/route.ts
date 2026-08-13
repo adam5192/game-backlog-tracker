@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 import { db } from "@/db";
 import { userGames } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -17,7 +17,19 @@ export async function POST(request: NextRequest) {
   const { userGameId } = await request.json();
 
   try {
-    await db.delete(userGames).where(eq(userGames.id, userGameId));
+    // only delete a row that belongs to current user
+    const deleted = await db
+      .delete(userGames)
+      .where(and(eq(userGames.id, userGameId), eq(userGames.userId, user.id)))
+      .returning();
+
+    if (deleted.length === 0) {
+      return NextResponse.json(
+        { error: "Game entry not found" },
+        { status: 404 },
+      );
+    }
+
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error("Failed to delete game:", err);
