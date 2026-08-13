@@ -87,10 +87,10 @@ export default function SteamImportGuide() {
           <button
             onClick={() => {
               navigator.clipboard.writeText(
-                "https://steamcommunity.com/my/edit/privacysettings",
+                "https://steamcommunity.com/my/edit/settings",
               );
               toast.success(
-                "Link copied — paste it in your browser while logged into Steam",
+                "Link copied. Paste it in your browser while logged into Steam",
               );
             }}
             className="text-xs text-accent hover:opacity-80 transition-opacity underline"
