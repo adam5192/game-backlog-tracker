@@ -3,6 +3,7 @@ import { createClient } from "@/utils/supabase/server";
 import { db } from "@/db";
 import { lists, listGames } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
+import { blockIfDemoUser } from "@/lib/demo";
 
 type Params = { params: Promise<{ id: string; gameId: string }> };
 
@@ -16,6 +17,9 @@ export async function DELETE(request: NextRequest, { params }: Params) {
   if (!user) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
+
+  const demoBlock = blockIfDemoUser(user.id);
+  if (demoBlock) return demoBlock;
 
   // confirm ownership of the list before allowing any modification
   const listRows = await db

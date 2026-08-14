@@ -5,6 +5,7 @@ import { lists, userGames } from "@/db/schema";
 import { eq, and, inArray } from "drizzle-orm";
 import { listGames, games } from "@/db/schema";
 import { asc } from "drizzle-orm";
+import { blockIfDemoUser } from "@/lib/demo";
 
 // Next.js app router passes the route segments (id foleder name) via a params object
 type Params = { params: Promise<{ id: string }> };
@@ -168,6 +169,9 @@ export async function DELETE(request: NextRequest, { params }: Params) {
   if (!user) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
+
+  const demoBlock = blockIfDemoUser(user.id);
+  if (demoBlock) return demoBlock;
 
   try {
     const deleted = await db

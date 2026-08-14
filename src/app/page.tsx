@@ -1,9 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Download, Sparkles, Clock3, SlidersHorizontal } from "lucide-react";
 import AuthModal from "@/components/AuthModal";
+import { createClient } from "@/utils/supabase/client";
+import { toast } from "sonner";
 
 const BACKDROP_COVERS = [
   "https://images.igdb.com/igdb/image/upload/t_720p/co2lbd.jpg",
@@ -50,6 +53,26 @@ const BACKDROP_COVERS = [
 
 export default function Home() {
   const [authOpen, setAuthOpen] = useState(false);
+  const [demoLoading, setDemoLoading] = useState(false);
+  const router = useRouter();
+  const supabase = createClient();
+
+  async function handleDemoLogin() {
+    setDemoLoading(true);
+    const { error } = await supabase.auth.signInWithPassword({
+      email: process.env.NEXT_PUBLIC_DEMO_EMAIL!,
+      password: process.env.NEXT_PUBLIC_DEMO_PASSWORD!,
+    });
+    setDemoLoading(false);
+
+    if (error) {
+      toast.error("Couldn't load the demo right now.");
+      return;
+    }
+
+    router.push("/dashboard");
+    router.refresh();
+  }
 
   return (
     <section className="relative min-h-screen overflow-hidden flex flex-col">
@@ -80,12 +103,21 @@ export default function Home() {
           picks for what to play next, pulled straight from your personal
           library.
         </p>
-        <button
-          className="text-sm lg:text-base px-6 lg:px-8 py-2.5 lg:py-3 rounded-full bg-accent text-accent-foreground hover:opacity-90 transition-opacity disabled:opacity-50 active:scale-95"
-          onClick={() => setAuthOpen(true)}
-        >
-          Get started
-        </button>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <button
+            className="text-sm lg:text-base px-6 lg:px-8 py-2.5 lg:py-3 rounded-full bg-accent text-accent-foreground hover:opacity-90 transition-opacity disabled:opacity-50 active:scale-95"
+            onClick={() => setAuthOpen(true)}
+          >
+            Get started
+          </button>
+          <button
+            className="text-sm lg:text-base px-6 lg:px-8 py-2.5 lg:py-3 rounded-full border border-border-color text-foreground hover:bg-surface-1 transition-colors disabled:opacity-50 active:scale-95"
+            onClick={handleDemoLogin}
+            disabled={demoLoading}
+          >
+            {demoLoading ? "Loading demo..." : "Try the demo"}
+          </button>
+        </div>
       </div>
 
       <div className="relative z-10 max-w-5xl lg:max-w-6xl xl:max-w-7xl mx-auto px-6 pb-12 lg:pb-16 w-full">

@@ -3,6 +3,7 @@ import { createClient } from "@/utils/supabase/server";
 import { db } from "@/db";
 import { userGames } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
+import { blockIfDemoUser } from "@/lib/demo";
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -14,10 +15,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
+  const demoBlock = blockIfDemoUser(user.id);
+  if (demoBlock) return demoBlock;
+
   const { userGameId } = await request.json();
 
   try {
-    // only delete a row that belongs to current user
+    // only delete a row that belongs to THIS user, never trust userGameId alone
     const deleted = await db
       .delete(userGames)
       .where(and(eq(userGames.id, userGameId), eq(userGames.userId, user.id)))
