@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Download, Sparkles, Clock3, SlidersHorizontal } from "lucide-react";
 import AuthModal from "@/components/AuthModal";
-import { createClient } from "@/utils/supabase/client";
 import { toast } from "sonner";
 
 const BACKDROP_COVERS = [
@@ -55,17 +54,13 @@ export default function Home() {
   const [authOpen, setAuthOpen] = useState(false);
   const [demoLoading, setDemoLoading] = useState(false);
   const router = useRouter();
-  const supabase = createClient();
 
   async function handleDemoLogin() {
     setDemoLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({
-      email: process.env.NEXT_PUBLIC_DEMO_EMAIL!,
-      password: process.env.NEXT_PUBLIC_DEMO_PASSWORD!,
-    });
+    const res = await fetch("/api/auth/demo", { method: "POST" });
     setDemoLoading(false);
 
-    if (error) {
+    if (!res.ok) {
       toast.error("Couldn't load the demo right now.");
       return;
     }
