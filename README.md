@@ -6,6 +6,12 @@ A full stack app for tracking your game backlog, rating what you've completed, o
 
 ## What it does
 
+<img width="947" height="740" alt="pic1" src="https://github.com/user-attachments/assets/a692ff89-b940-4477-bac9-38c875f3fea1" />
+<img width="958" height="742" alt="stats" src="https://github.com/user-attachments/assets/28bca031-985a-4780-b2d2-758d507cdaf7" />
+<img width="956" height="740" alt="lists" src="https://github.com/user-attachments/assets/75fa025f-a33d-412c-b01a-0067351a9d90" />
+<img width="946" height="742" alt="pic2" src="https://github.com/user-attachments/assets/cde4a4a0-ecd0-4549-8d3f-0d964ac6e003" />
+
+
 **Tracking your library**
 - Search for games and add them to your backlog, with cover art, descriptions, and ratings pulled from IGDB
 - Track status across backlog, playing, completed, and dropped
