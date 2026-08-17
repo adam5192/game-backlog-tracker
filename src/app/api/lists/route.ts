@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { name, description } = body;
+  const { name, description, isPublic } = body;
 
   // validation: name required, non-empty, reasonable length
   if (!name || typeof name !== "string" || !name.trim()) {
@@ -99,6 +99,7 @@ export async function POST(request: NextRequest) {
         userId: user.id,
         name: name.trim(),
         description: description?.trim() || null,
+        isPublic: isPublic === true,
       })
       .returning();
 

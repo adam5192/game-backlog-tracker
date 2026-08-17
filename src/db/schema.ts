@@ -84,3 +84,11 @@ export const listGames = pgTable(
     uniqueListGame: unique().on(table.listId, table.gameId),
   }),
 );
+
+export const profiles = pgTable("profiles", {
+  userId: uuid("user_id").primaryKey(), // matches auth.users.id
+  displayName: text("display_name").notNull(),
+  bio: text("bio"),
+  avatarUrl: text("avatar_url"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
