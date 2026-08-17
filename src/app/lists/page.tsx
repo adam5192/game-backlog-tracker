@@ -21,8 +21,10 @@ type PublicList = {
   id: string;
   name: string;
   description: string | null;
+  creatorId: string;
   creatorName: string;
   creatorAvatar: string | null;
+  previewCovers: string[];
 };
 
 export default function ListsPage() {
@@ -301,20 +303,47 @@ export default function ListsPage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {publicLists.map((list) => (
-              <Link
+              <div
                 key={list.id}
-                href={`/lists/${list.id}`}
-                className="bg-surface-1 border border-border-color rounded-2xl p-5 hover:border-accent transition-colors"
+                className="bg-surface-1 border border-border-color rounded-2xl overflow-hidden hover:border-accent transition-colors"
               >
-                <h3 className="text-foreground font-medium mb-1">
-                  {list.name}
-                </h3>
-                {list.description && (
-                  <p className="text-sm text-text-secondary line-clamp-2 mb-3">
-                    {list.description}
-                  </p>
-                )}
-                <div className="flex items-center gap-2">
+                <Link href={`/lists/${list.id}`} className="block">
+                  {list.previewCovers.length > 0 && (
+                    <div className="grid grid-cols-4 gap-2 p-3 pb-0">
+                      {Array.from({ length: 4 }).map((_, i) => (
+                        <div
+                          key={i}
+                          className="aspect-[3/4] relative bg-surface-2 rounded-lg overflow-hidden"
+                        >
+                          {list.previewCovers[i] && (
+                            <Image
+                              src={list.previewCovers[i]}
+                              alt=""
+                              fill
+                              className="object-cover"
+                              sizes="100px"
+                            />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div className="px-5 pt-5">
+                    <h3 className="text-foreground font-medium mb-1">
+                      {list.name}
+                    </h3>
+                    {list.description && (
+                      <p className="text-sm text-text-secondary line-clamp-2">
+                        {list.description}
+                      </p>
+                    )}
+                  </div>
+                </Link>
+
+                <Link
+                  href={`/profile/${list.creatorId}`}
+                  className="flex items-center gap-2 px-5 pb-5 pt-3 hover:opacity-80 transition-opacity"
+                >
                   <div className="w-5 h-5 rounded-full bg-surface-2 relative overflow-hidden flex-shrink-0">
                     {list.creatorAvatar && (
                       <Image
@@ -329,8 +358,8 @@ export default function ListsPage() {
                   <span className="text-xs text-text-secondary">
                     {list.creatorName}
                   </span>
-                </div>
-              </Link>
+                </Link>
+              </div>
             ))}
           </div>
         )}

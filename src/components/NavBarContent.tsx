@@ -14,7 +14,13 @@ const links = [
   { href: "/lists", label: "Lists" },
 ];
 
-export default function NavBarContent({ email }: { email: string }) {
+type Props = {
+  email: string;
+  avatarUrl: string | null;
+  hasProfile: boolean;
+};
+
+export default function NavBarContent({ email, avatarUrl, hasProfile }: Props) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -46,7 +52,11 @@ export default function NavBarContent({ email }: { email: string }) {
         </div>
 
         <div className="flex items-center gap-2">
-          <UserMenu email={email} />
+          <UserMenu
+            email={email}
+            avatarUrl={avatarUrl}
+            hasProfile={hasProfile}
+          />
           {/* hamburger only shows below sm */}
           <button
             onClick={() => setMobileOpen((o) => !o)}
