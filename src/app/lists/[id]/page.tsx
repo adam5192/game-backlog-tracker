@@ -363,7 +363,7 @@ export default function ListDetailPage() {
               Nothing in your library yet, search below instead.
             </p>
           ) : (
-            <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 mb-5 max-h-64 overflow-y-auto">
+            <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 mb-5 max-h-64 overflow-y-auto no-scrollbar">
               {library.map((game) => (
                 <PickableCard
                   key={game.igdbId}
@@ -395,7 +395,7 @@ export default function ListDetailPage() {
             </button>
           </div>
           {searchResults.length > 0 && (
-            <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 max-h-64 overflow-y-auto">
+            <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 max-h-64 overflow-y-auto no-scrollbar">
               {searchResults.map((game) => (
                 <PickableCard
                   key={game.igdbId}

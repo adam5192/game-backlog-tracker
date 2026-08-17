@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Star } from "lucide-react";
+import { Star, X } from "lucide-react";
 
 type Props = {
   value: number;
@@ -11,11 +11,10 @@ type Props = {
 export default function StarRatings({ value, onChange }: Props) {
   // tracks what the stars should display while hovering, preview rating before comitting
   const [hoverValue, setHoverValue] = useState<number | null>(null);
-
   const displayValue = hoverValue ?? value;
 
   return (
-    <div className="flex gap-1">
+    <div className="flex gap-1" onMouseLeave={() => setHoverValue(null)}>
       {/* 5 stars each worth 2 pts */}
       {[1, 2, 3, 4, 5].map((star) => {
         const starValue = star * 2;
@@ -45,7 +44,6 @@ export default function StarRatings({ value, onChange }: Props) {
               type="button"
               className="absolute inset-y-0 left-0 w-1/2"
               onMouseEnter={() => setHoverValue(starValue - 1)}
-              onMouseLeave={() => setHoverValue(null)}
               onClick={() => onChange(starValue - 1)}
               aria-label={`Rate ${starValue - 1} out of 10`}
             />
@@ -53,18 +51,24 @@ export default function StarRatings({ value, onChange }: Props) {
               type="button"
               className="absolute inset-y-0 right-0 w-1/2"
               onMouseEnter={() => setHoverValue(starValue)}
-              onMouseLeave={() => setHoverValue(null)}
               onClick={() => onChange(starValue)}
               aria-label={`Rate ${starValue} out of 10`}
             />
           </div>
         );
       })}
-      {/* text next to the stars, so the exact value is
-          always visible */}
-      <span className="text-sm text-text-secondary ml-2 self-center">
-        {value > 0 ? `${value}/10` : "Not rated"}
-      </span>
+
+      {/* only show the clear button once there's actually something to clear */}
+      {value > 0 && (
+        <button
+          type="button"
+          onClick={() => onChange(0)}
+          aria-label="Clear rating"
+          className="ml-1 text-gray-500 hover:text-gray-300 transition-colors"
+        >
+          <X size={14} />
+        </button>
+      )}
     </div>
   );
 }
