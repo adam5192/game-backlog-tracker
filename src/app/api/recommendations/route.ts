@@ -4,11 +4,7 @@ import { db } from "@/db";
 import { userGames, games, recommendations } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { getRecommendations } from "@/lib/recommendations";
-import { Ratelimit } from "@upstash/ratelimit";
-import { Redis } from "@upstash/redis";
 import { recommendationsRatelimit } from "@/lib/ratelimit";
-
-const redis = Redis.fromEnv();
 
 // allows 1 request per 5-second window enforced through shared storage that
 // every serverless instance can see, instead of in-memory state
@@ -23,16 +19,6 @@ export async function GET(request: NextRequest) {
 
   if (!user) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
-  }
-
-  // each user gets their own independent 5-second window
-  const { success } = await recommendationsRatelimit.limit(user.id);
-
-  if (!success) {
-    return NextResponse.json(
-      { error: "Please wait a moment before requesting again." },
-      { status: 429 },
-    );
   }
 
   // ?refresh=true bypasses the cache entirely, used when the user has
@@ -60,9 +46,17 @@ export async function GET(request: NextRequest) {
   let recList: { userGameId: string; reason: string }[];
 
   if (cached && isFresh && !forceRefresh) {
-    // use the cached set — no API cal
+    // use the cached set : no API call, no rate limit
     recList = JSON.parse(cached.data);
   } else {
+    // each user gets their own independent 5-second window
+    const { success } = await recommendationsRatelimit.limit(user.id);
+    if (!success) {
+      return NextResponse.json(
+        { error: "Please wait a moment before requesting again." },
+        { status: 429 },
+      );
+    }
     const completedRows = await db
       .select()
       .from(userGames)

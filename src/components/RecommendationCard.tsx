@@ -124,7 +124,7 @@ export default function RecommendationCard() {
         </button>
 
         {current.coverUrl && (
-          <div className="w-16 h-20 relative flex-shrink-0 rounded overflow-hidden">
+          <div className="w-16 h-20 relative shrink-0 rounded overflow-hidden">
             <Image
               src={current.coverUrl}
               alt={current.name}

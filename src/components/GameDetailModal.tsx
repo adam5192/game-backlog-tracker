@@ -118,7 +118,7 @@ export default function GameDetailModal({ game, onClose }: Props) {
         className="bg-surface-2 border border-border-color rounded-2xl max-w-md w-full max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="aspect-video bg-surface-1 relative flex-shrink-0">
+        <div className="aspect-video bg-surface-1 relative shrink-0">
           {(game.artworkUrl ?? game.coverUrl) && (
             <Image
               src={game.artworkUrl ?? game.coverUrl ?? ""}
