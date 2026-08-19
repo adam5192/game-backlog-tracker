@@ -49,6 +49,7 @@ type ListDetail = {
   id: string;
   name: string;
   description: string | null;
+  isPublic: boolean;
 };
 
 // simplified game shape used by the library grid and search results
@@ -70,6 +71,8 @@ export default function ListDetailPage() {
   const [list, setList] = useState<ListDetail | null>(null);
   const [games, setGames] = useState<ListGame[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isOwner, setIsOwner] = useState(false);
+  const [editIsPublic, setEditIsPublic] = useState(false);
 
   const [showAddPanel, setShowAddPanel] = useState(false);
   const [library, setLibrary] = useState<PickableGame[]>([]);
@@ -109,9 +112,16 @@ export default function ListDetailPage() {
 
   async function loadList() {
     const res = await fetch(`/api/lists/${listId}`);
+
+    if (res.status === 404) {
+      setList(null);
+      return;
+    }
+
     const data = await res.json();
     setList(data.list ?? null);
     setGames(data.games ?? []);
+    setIsOwner(data.isOwner ?? false);
   }
 
   useEffect(() => {
@@ -232,6 +242,7 @@ export default function ListDetailPage() {
     if (!list) return;
     setEditName(list.name);
     setEditDescription(list.description ?? "");
+    setEditIsPublic(list.isPublic);
     setEditing(true);
   }
 
@@ -245,7 +256,11 @@ export default function ListDetailPage() {
     const res = await fetch(`/api/lists/${listId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: editName, description: editDescription }),
+      body: JSON.stringify({
+        name: editName,
+        description: editDescription,
+        isPublic: editIsPublic,
+      }),
     });
     setSavingEdit(false);
 
@@ -298,54 +313,68 @@ export default function ListDetailPage() {
           <h1 className="text-2xl font-medium text-foreground">{list.name}</h1>
         )}
 
-        <div className="flex gap-2">
-          {editing ? (
-            <button
-              onClick={handleSaveEdit}
-              disabled={savingEdit}
-              className="flex items-center gap-1.5 text-sm px-4 py-2 rounded-full bg-accent text-accent-foreground hover:opacity-90 transition-opacity disabled:opacity-50"
-            >
-              <Check size={16} />
-              {savingEdit ? "Saving..." : "Save"}
-            </button>
-          ) : (
-            <button
-              onClick={startEditing}
-              aria-label="Edit list"
-              className="w-9 h-9 rounded-full flex items-center justify-center text-text-secondary hover:text-foreground hover:bg-surface-1 transition-colors"
-            >
-              <Pencil size={16} />
-            </button>
-          )}
+        {/* the whole button group only renders for the owner (edit, delete, add games)*/}
+        {isOwner && (
+          <div className="flex gap-2">
+            {editing ? (
+              <button
+                onClick={handleSaveEdit}
+                disabled={savingEdit}
+                className="flex items-center gap-1.5 text-sm px-4 py-2 rounded-full bg-accent text-accent-foreground hover:opacity-90 transition-opacity disabled:opacity-50"
+              >
+                <Check size={16} />
+                {savingEdit ? "Saving..." : "Save"}
+              </button>
+            ) : (
+              <button
+                onClick={startEditing}
+                aria-label="Edit list"
+                className="w-9 h-9 rounded-full flex items-center justify-center text-text-secondary hover:text-foreground hover:bg-surface-1 transition-colors"
+              >
+                <Pencil size={16} />
+              </button>
+            )}
 
-          {/* only show the delete button when not mid-edit */}
-          {!editing && (
-            <button
-              onClick={() => setConfirmingDeleteList(true)}
-              aria-label="Delete list"
-              className="w-9 h-9 rounded-full flex items-center justify-center text-text-secondary hover:text-danger hover:bg-surface-1 transition-colors"
-            >
-              <Trash2 size={16} />
-            </button>
-          )}
+            {!editing && (
+              <button
+                onClick={() => setConfirmingDeleteList(true)}
+                aria-label="Delete list"
+                className="w-9 h-9 rounded-full flex items-center justify-center text-text-secondary hover:text-danger hover:bg-surface-1 transition-colors"
+              >
+                <Trash2 size={16} />
+              </button>
+            )}
 
-          <button
-            onClick={toggleAddPanel}
-            className="flex items-center gap-1.5 text-sm px-4 py-2 rounded-full bg-accent text-accent-foreground hover:opacity-90 transition-opacity"
-          >
-            <Plus size={16} />
-            {showAddPanel ? "Done adding" : "Add games"}
-          </button>
-        </div>
+            <button
+              onClick={toggleAddPanel}
+              className="flex items-center gap-1.5 text-sm px-4 py-2 rounded-full bg-accent text-accent-foreground hover:opacity-90 transition-opacity"
+            >
+              <Plus size={16} />
+              {showAddPanel ? "Done adding" : "Add games"}
+            </button>
+          </div>
+        )}
       </div>
       {editing ? (
-        <textarea
-          className="bg-surface-1 text-foreground placeholder-text-secondary px-3 py-2 rounded-lg w-full border border-border-color focus:border-accent outline-none transition-colors mb-6 text-sm resize-none"
-          placeholder="Description (optional)"
-          rows={2}
-          value={editDescription}
-          onChange={(e) => setEditDescription(e.target.value)}
-        />
+        <>
+          <textarea
+            className="bg-surface-1 text-foreground placeholder-text-secondary px-3 py-2 rounded-lg w-full border border-border-color focus:border-accent outline-none transition-colors mb-6 text-sm resize-none"
+            placeholder="Description (optional)"
+            rows={2}
+            value={editDescription}
+            onChange={(e) => setEditDescription(e.target.value)}
+          />
+
+          <label className="flex items-center gap-2 text-sm text-text-secondary mb-6 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={editIsPublic}
+              onChange={(e) => setEditIsPublic(e.target.checked)}
+              className="accent-accent"
+            />
+            Public (anyone can find and view this list)
+          </label>
+        </>
       ) : (
         list.description && (
           <p className="text-text-secondary text-sm mb-6">{list.description}</p>
@@ -412,7 +441,7 @@ export default function ListDetailPage() {
         <p className="text-text-secondary text-sm">
           No games in this list yet.
         </p>
-      ) : (
+      ) : isOwner ? (
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
@@ -436,6 +465,32 @@ export default function ListDetailPage() {
             </div>
           </SortableContext>
         </DndContext>
+      ) : (
+        // read-only for non viewers (no drag or delete)
+        <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-7 gap-3">
+          {games.map((game) => (
+            <button
+              key={game.listGameId}
+              onClick={() => setSelectedGame(game)}
+              className="text-left border border-border-color rounded-lg overflow-hidden hover:border-accent transition-colors"
+            >
+              <div className="aspect-3/4 bg-surface-1 relative">
+                {game.coverUrl && (
+                  <Image
+                    src={game.coverUrl}
+                    alt={game.name}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 33vw, 16vw"
+                  />
+                )}
+              </div>
+              <p className="text-xs text-foreground p-1.5 truncate">
+                {game.name}
+              </p>
+            </button>
+          ))}
+        </div>
       )}
       {/* delete confirmation */}
       <ConfirmDialog

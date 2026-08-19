@@ -22,12 +22,18 @@ export async function GET(request: NextRequest, { params }: Params) {
   }
 
   try {
-    const listRows = await db
-      .select()
-      .from(lists)
-      .where(and(eq(lists.id, id), eq(lists.userId, user.id)));
+    // fetch by id, no ownership filter bc of public read-only lists
+    const listRows = await db.select().from(lists).where(eq(lists.id, id));
 
     if (listRows.length === 0) {
+      return NextResponse.json({ error: "List not found" }, { status: 404 });
+    }
+
+    const list = listRows[0];
+    const isOwner = user != null && list.userId === user.id;
+
+    // list can be viewed if its public or if you own it
+    if (!list.isPublic && !isOwner) {
       return NextResponse.json({ error: "List not found" }, { status: 404 });
     }
 
@@ -83,7 +89,7 @@ export async function GET(request: NextRequest, { params }: Params) {
         notes: ownedEntry?.notes ?? null,
       };
     });
-    return NextResponse.json({ list: listRows[0], games: listGamesData });
+    return NextResponse.json({ list, games: listGamesData, isOwner });
   } catch (err) {
     console.error("Failed to fetch list:", err);
     return NextResponse.json(
@@ -105,7 +111,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
   }
 
   const body = await request.json();
-  const { name, description } = body;
+  const { name, description, isPublic } = body;
 
   if (name != null) {
     if (typeof name !== "string" || !name.trim()) {
@@ -132,7 +138,6 @@ export async function PATCH(request: NextRequest, { params }: Params) {
   }
 
   try {
-    // ownership check on top of RLS policy at db layer
     const updated = await db
       .update(lists)
       .set({
@@ -140,6 +145,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
         ...(description !== undefined && {
           description: description?.trim() || null,
         }),
+        ...(isPublic !== undefined && { isPublic: isPublic === true }),
         updatedAt: new Date(),
       })
       .where(and(eq(lists.id, id), eq(lists.userId, user.id)))
