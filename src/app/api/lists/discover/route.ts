@@ -1,26 +1,33 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { lists, profiles, listGames, games } from "@/db/schema";
-import { eq, desc, ilike, and, inArray, asc } from "drizzle-orm";
+import { eq, desc, ilike, and, inArray, asc, sql } from "drizzle-orm";
+import { listVotes } from "@/db/schema";
 
 export async function GET(request: NextRequest) {
   const search = request.nextUrl.searchParams.get("q");
 
   try {
+    // count votes per list in the same query
     const results = await db
-      .select()
+      .select({
+        list: lists,
+        profile: profiles,
+        voteCount: sql<number>`count(${listVotes.id})`,
+      })
       .from(lists)
-      .innerJoin(profiles, eq(lists.userId, profiles.userId))
+      .leftJoin(profiles, eq(lists.userId, profiles.userId))
+      .leftJoin(listVotes, eq(listVotes.listId, lists.id))
       .where(
         search
           ? and(eq(lists.isPublic, true), ilike(lists.name, `%${search}%`))
           : eq(lists.isPublic, true),
       )
-      .orderBy(desc(lists.createdAt))
+      .groupBy(lists.id, profiles.userId)
+      .orderBy(desc(sql`count(${listVotes.id})`)) // sort by vote count, highest first
       .limit(20);
 
-    // pull every game for every returned list in 1 query, rather than looping and querying per-list.
-    const listIds = results.map((row) => row.lists.id);
+    const listIds = results.map((row) => row.list.id);
     const allListGames = listIds.length
       ? await db
           .select()
@@ -40,13 +47,14 @@ export async function GET(request: NextRequest) {
     }
 
     const shaped = results.map((row) => ({
-      id: row.lists.id,
-      name: row.lists.name,
-      description: row.lists.description,
-      creatorId: row.lists.userId,
-      creatorName: row.profiles?.displayName ?? "Anonymous",
-      creatorAvatar: row.profiles?.avatarUrl ?? null,
-      previewCovers: coversByList[row.lists.id] ?? [], // added
+      id: row.list.id,
+      name: row.list.name,
+      description: row.list.description,
+      creatorId: row.list.userId,
+      creatorName: row.profile?.displayName ?? "Anonymous",
+      creatorAvatar: row.profile?.avatarUrl ?? null,
+      previewCovers: coversByList[row.list.id] ?? [],
+      voteCount: Number(row.voteCount),
     }));
 
     return NextResponse.json({ lists: shaped });

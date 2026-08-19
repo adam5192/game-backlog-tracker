@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { Plus, Search, Globe } from "lucide-react";
+import { Plus, Search, Globe, ArrowBigUp } from "lucide-react";
 import Image from "next/image";
 
 // shape of one of MY OWN lists, from GET /api/lists
@@ -25,6 +25,7 @@ type PublicList = {
   creatorName: string;
   creatorAvatar: string | null;
   previewCovers: string[];
+  voteCount: number;
 };
 
 export default function ListsPage() {
@@ -313,7 +314,7 @@ export default function ListsPage() {
                       {Array.from({ length: 4 }).map((_, i) => (
                         <div
                           key={i}
-                          className="aspect-[3/4] relative bg-surface-2 rounded-lg overflow-hidden"
+                          className="aspect-3/4 relative bg-surface-2 rounded-lg overflow-hidden"
                         >
                           {list.previewCovers[i] && (
                             <Image
@@ -328,10 +329,14 @@ export default function ListsPage() {
                       ))}
                     </div>
                   )}
+
                   <div className="px-5 pt-5">
                     <h3 className="text-foreground font-medium mb-1">
                       {list.name}
                     </h3>
+                    <span className="text-xs text-text-secondary ml-auto flex items-center gap-1">
+                      <ArrowBigUp size={12} /> {list.voteCount}
+                    </span>
                     {list.description && (
                       <p className="text-sm text-text-secondary line-clamp-2">
                         {list.description}
@@ -344,7 +349,7 @@ export default function ListsPage() {
                   href={`/profile/${list.creatorId}`}
                   className="flex items-center gap-2 px-5 pb-5 pt-3 hover:opacity-80 transition-opacity"
                 >
-                  <div className="w-5 h-5 rounded-full bg-surface-2 relative overflow-hidden flex-shrink-0">
+                  <div className="w-5 h-5 rounded-full bg-surface-2 relative overflow-hidden shrink-0">
                     {list.creatorAvatar && (
                       <Image
                         src={list.creatorAvatar}

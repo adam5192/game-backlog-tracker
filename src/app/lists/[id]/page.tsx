@@ -25,6 +25,7 @@ import {
 } from "@dnd-kit/sortable";
 import SortableGameCard from "@/components/SortableGameCard";
 import GameDetailModal from "@/components/GameDetailModal";
+import { ArrowBigUp } from "lucide-react";
 
 type ListGame = {
   listGameId: string;
@@ -93,6 +94,10 @@ export default function ListDetailPage() {
   const [confirmingDeleteList, setConfirmingDeleteList] = useState(false);
   const [deletingList, setDeletingList] = useState(false);
 
+  const [voteCount, setVoteCount] = useState(0);
+  const [hasVoted, setHasVoted] = useState(false);
+  const [voting, setVoting] = useState(false);
+
   // tracks which ids are alr in this list, so we can show its already added
   const inListIds = new Set(games.map((g) => g.igdbId));
 
@@ -122,6 +127,8 @@ export default function ListDetailPage() {
     setList(data.list ?? null);
     setGames(data.games ?? []);
     setIsOwner(data.isOwner ?? false);
+    setVoteCount(data.voteCount ?? 0);
+    setHasVoted(data.hasVoted ?? false);
   }
 
   useEffect(() => {
@@ -183,6 +190,28 @@ export default function ListDetailPage() {
     const listData = await listRes.json();
     setGames(listData.games ?? []);
     toast.success(`Added ${game.name}`);
+  }
+
+  async function handleVote() {
+    setVoting(true);
+    try {
+      const res = await fetch(`/api/lists/${listId}/vote`, { method: "POST" });
+
+      if (!res.ok) {
+        const data = await res.json();
+        toast.error(data.error ?? "Couldn't vote on this list");
+        return;
+      }
+
+      const data = await res.json();
+      setVoteCount(data.voteCount);
+      setHasVoted(data.hasVoted);
+    } catch (err) {
+      console.error("Error voting:", err);
+      toast.error("Something went wrong. Check your connection and try again.");
+    } finally {
+      setVoting(false);
+    }
   }
 
   async function handleRemove(gameId: string) {
@@ -311,6 +340,21 @@ export default function ListDetailPage() {
           />
         ) : (
           <h1 className="text-2xl font-medium text-foreground">{list.name}</h1>
+        )}
+
+        {list.isPublic && (
+          <button
+            onClick={handleVote}
+            disabled={voting}
+            className={`flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-full border transition-colors disabled:opacity-50 ${
+              hasVoted
+                ? "bg-accent text-accent-foreground border-accent"
+                : "border-border-color text-text-secondary hover:text-foreground hover:bg-surface-1"
+            }`}
+          >
+            <ArrowBigUp size={16} className={hasVoted ? "fill-current" : ""} />
+            {voteCount}
+          </button>
         )}
 
         {/* the whole button group only renders for the owner (edit, delete, add games)*/}

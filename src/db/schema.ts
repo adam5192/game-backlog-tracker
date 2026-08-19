@@ -92,3 +92,19 @@ export const profiles = pgTable("profiles", {
   avatarUrl: text("avatar_url"),
   createdAt: timestamp("created_at").defaultNow(),
 });
+
+export const listVotes = pgTable(
+  "list_votes",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    listId: uuid("list_id")
+      .notNull()
+      .references(() => lists.id, { onDelete: "cascade" }),
+    userId: uuid("user_id").notNull(),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => ({
+    // one upvote per user per list
+    uniqueVote: unique().on(table.listId, table.userId),
+  }),
+);

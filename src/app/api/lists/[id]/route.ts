@@ -6,6 +6,8 @@ import { eq, and, inArray } from "drizzle-orm";
 import { listGames, games } from "@/db/schema";
 import { asc } from "drizzle-orm";
 import { blockIfDemoUser } from "@/lib/demo";
+import { listVotes } from "@/db/schema";
+import { sql } from "drizzle-orm";
 
 // Next.js app router passes the route segments (id foleder name) via a params object
 type Params = { params: Promise<{ id: string }> };
@@ -22,7 +24,6 @@ export async function GET(request: NextRequest, { params }: Params) {
   }
 
   try {
-    // fetch by id, no ownership filter bc of public read-only lists
     const listRows = await db.select().from(lists).where(eq(lists.id, id));
 
     if (listRows.length === 0) {
@@ -32,13 +33,27 @@ export async function GET(request: NextRequest, { params }: Params) {
     const list = listRows[0];
     const isOwner = user != null && list.userId === user.id;
 
-    // list can be viewed if its public or if you own it
     if (!list.isPublic && !isOwner) {
       return NextResponse.json({ error: "List not found" }, { status: 404 });
     }
 
-    // join list_games with games, ordered by position so the returned
-    // array is already in the correct display order
+    // vote count
+    const voteCountResult = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(listVotes)
+      .where(eq(listVotes.listId, id));
+    const voteCount = Number(voteCountResult[0]?.count ?? 0);
+
+    // hasVoted only makes sense for a logged-in viewer
+    let hasVoted = false;
+    if (user) {
+      const myVote = await db
+        .select()
+        .from(listVotes)
+        .where(and(eq(listVotes.listId, id), eq(listVotes.userId, user.id)));
+      hasVoted = myVote.length > 0;
+    }
+
     const gameRows = await db
       .select()
       .from(listGames)
@@ -46,19 +61,21 @@ export async function GET(request: NextRequest, { params }: Params) {
       .where(eq(listGames.listId, id))
       .orderBy(asc(listGames.position));
 
-    // fetch the users library entries for all these games so we can tell which ones are already in their library
     const gameIds = gameRows.map((row) => row.games.id);
-    const userGameRows = gameIds.length
-      ? await db
-          .select()
-          .from(userGames)
-          .where(
-            and(
-              eq(userGames.userId, user.id),
-              inArray(userGames.gameId, gameIds),
-            ),
-          )
-      : [];
+
+    const userGameRows =
+      user && gameIds.length
+        ? await db
+            .select()
+            .from(userGames)
+            .where(
+              and(
+                eq(userGames.userId, user.id),
+                inArray(userGames.gameId, gameIds),
+              ),
+            )
+        : [];
+
     const userGameByGameId = new Map(userGameRows.map((ug) => [ug.gameId, ug]));
 
     const listGamesData = gameRows.map((row) => {
@@ -82,14 +99,20 @@ export async function GET(request: NextRequest, { params }: Params) {
           ? Number(row.games.hltbCompletionist)
           : null,
         position: row.list_games.position,
-        // null if this game isn't in their library at all yet
         userGameId: ownedEntry?.id ?? null,
         status: ownedEntry?.status ?? null,
         rating: ownedEntry?.rating ? Number(ownedEntry.rating) : null,
         notes: ownedEntry?.notes ?? null,
       };
     });
-    return NextResponse.json({ list, games: listGamesData, isOwner });
+
+    return NextResponse.json({
+      list,
+      games: listGamesData,
+      isOwner,
+      voteCount,
+      hasVoted,
+    });
   } catch (err) {
     console.error("Failed to fetch list:", err);
     return NextResponse.json(
