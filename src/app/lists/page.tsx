@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Plus, Search, Globe, ArrowBigUp } from "lucide-react";
@@ -43,6 +43,18 @@ export default function ListsPage() {
   const [publicLoading, setPublicLoading] = useState(true);
   const [publicLoadError, setPublicLoadError] = useState(false);
   const [publicQuery, setPublicQuery] = useState("");
+  const [createOpen, setCreateOpen] = useState(false);
+  const createRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (createRef.current && !createRef.current.contains(e.target as Node)) {
+        setCreateOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // own function so the retry button can call it again too
   async function loadMyLists() {
@@ -112,21 +124,19 @@ export default function ListsPage() {
         return;
       }
 
-      // grab this before resetting state below, since setIsPublic(true)
-      // wont have "taken effect" yet by the time we check it after
       const wasPublic = isPublic;
-
       setNewListName("");
       setNewListDescription("");
-      setIsPublic(true); // reset back to the default (public) for next time
+      setIsPublic(true);
+      setCreateOpen(false); // close the dropdown on success
       toast.success("List created");
 
       loadMyLists();
       if (wasPublic) {
-        loadPublicLists(); // show it in the public section right away too
+        loadPublicLists();
       }
     } catch (err) {
-      console.error("error creating list:", err);
+      console.error("Error creating list:", err);
       toast.error("Something went wrong. Check your connection and try again.");
     } finally {
       setCreating(false);
@@ -135,44 +145,54 @@ export default function ListsPage() {
 
   return (
     <div className="px-4 py-8 sm:px-8 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-medium mb-6 text-foreground">Your lists</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-medium text-foreground">Your lists</h1>
 
-      {/* create list form */}
-      <div className="flex flex-col gap-2 mb-8">
-        <div className="flex gap-2">
-          <input
-            className="bg-surface-1 text-foreground placeholder-text-secondary px-4 py-2 rounded-lg flex-1 border border-border-color focus:border-accent outline-none transition-colors"
-            placeholder="New list name..."
-            value={newListName}
-            onChange={(e) => setNewListName(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleCreate()}
-          />
+        <div className="relative" ref={createRef}>
           <button
-            className="flex items-center gap-1.5 text-sm px-4 py-2 rounded-full bg-accent text-accent-foreground hover:opacity-90 transition-opacity disabled:opacity-50"
-            onClick={handleCreate}
-            disabled={creating}
+            onClick={() => setCreateOpen((o) => !o)}
+            className="flex items-center gap-1.5 text-sm px-4 py-2 rounded-full bg-accent text-accent-foreground hover:opacity-90 transition-opacity"
           >
             <Plus size={16} />
-            {creating ? "Creating..." : "Create list"}
+            New list
           </button>
+
+          {createOpen && (
+            <div className="absolute right-0 top-11 w-80 bg-surface-2 border border-border-color rounded-2xl p-4 shadow-lg z-50">
+              <input
+                className="bg-surface-1 text-foreground placeholder-text-secondary px-4 py-2 rounded-lg w-full border border-border-color focus:border-accent outline-none transition-colors mb-2"
+                placeholder="New list name..."
+                value={newListName}
+                onChange={(e) => setNewListName(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleCreate()}
+                autoFocus
+              />
+              <input
+                className="bg-surface-1 text-foreground placeholder-text-secondary px-4 py-2 rounded-lg w-full border border-border-color focus:border-accent outline-none transition-colors mb-2 text-sm"
+                placeholder="Description (optional)"
+                value={newListDescription}
+                onChange={(e) => setNewListDescription(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleCreate()}
+              />
+              <label className="flex items-center gap-2 text-sm text-text-secondary cursor-pointer mb-3">
+                <input
+                  type="checkbox"
+                  checked={isPublic}
+                  onChange={(e) => setIsPublic(e.target.checked)}
+                  className="accent-accent"
+                />
+                Make this list public
+              </label>
+              <button
+                className="w-full text-sm px-4 py-2 rounded-full bg-accent text-accent-foreground disabled:opacity-50"
+                onClick={handleCreate}
+                disabled={creating}
+              >
+                {creating ? "Creating..." : "Create list"}
+              </button>
+            </div>
+          )}
         </div>
-        <input
-          className="bg-surface-1 text-foreground placeholder-text-secondary px-4 py-2 rounded-lg border border-border-color focus:border-accent outline-none transition-colors text-sm"
-          placeholder="Description (optional)"
-          value={newListDescription}
-          onChange={(e) => setNewListDescription(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleCreate()}
-        />
-        {/* toggle for the list currently being created */}
-        <label className="flex items-center gap-2 text-sm text-text-secondary cursor-pointer">
-          <input
-            type="checkbox"
-            checked={isPublic}
-            onChange={(e) => setIsPublic(e.target.checked)}
-            className="accent-accent"
-          />
-          Make this list public (anyone can find and view it)
-        </label>
       </div>
 
       {/* your lists: loading / error / empty / real data, handle all 4 */}
